@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+    <TextView android:id="@+id/textView1" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/username"></TextView>
+    <EditText android:id="@+id/username" android:layout_height="wrap_content" android:layout_width="match_parent" android:hint="@string/default_username"></EditText>
+    <TextView android:id="@+id/textView2" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/password"></TextView>
+    <EditText android:id="@+id/password" android:layout_height="wrap_content" android:layout_width="match_parent" android:text="" android:password="true"></EditText>
+    <Button android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/login" android:text="@string/login"></Button>
+    <Button android:layout_height="wrap_content" android:id="@+id/forgot_password" android:layout_width="match_parent" android:text="@string/forgot_password"></Button>
+    
+</LinearLayout>

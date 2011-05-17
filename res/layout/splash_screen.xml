@@ -1,0 +1,1 @@
+<ImageView android:id="@+id/splash" xmlns:android="http://schemas.android.com/apk/res/android" android:src="@drawable/splash_img" android:background="@color/white" android:layout_height="match_parent" android:layout_width="match_parent"></ImageView>
