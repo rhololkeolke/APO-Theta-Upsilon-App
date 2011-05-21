@@ -7,4 +7,6 @@
     <string name="default_username">Type your Case ID here.</string>
     <string name="login">Login</string>
     <string name="forgot_password">Click Here to Reset Your Password</string>
+    <string name="forgot_password_directions">Type your Case ID in the box then tap the reset button.  In a few minutes an email will be sent to you with your new password.</string>
+    <string name="reset">Reset</string>
 </resources>

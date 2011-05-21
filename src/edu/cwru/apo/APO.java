@@ -29,6 +29,7 @@ public class APO extends Activity {
                             	 // start login activity
                             	 Intent loginIntent = new Intent(APO.this, Login.class);
                             	 APO.this.startActivity(loginIntent);
+                            	 finish();
                              }
                              break;
                      }

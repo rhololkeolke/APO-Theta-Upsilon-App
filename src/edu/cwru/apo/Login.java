@@ -1,6 +1,7 @@
 package edu.cwru.apo;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -13,7 +14,8 @@ public class Login extends Activity implements OnClickListener{
 	private EditText username;
 	private EditText password;
 	
-	public void OnCreate(Bundle savedInstanceState)
+	@Override
+	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.login);
@@ -34,6 +36,8 @@ public class Login extends Activity implements OnClickListener{
 			break;
 		case R.id.forgot_password:
 			//start forgot password activity
+			Intent forgotPasswordIntent = new Intent(Login.this, ForgotPassword.class);
+			Login.this.startActivity(forgotPasswordIntent);
 			break;
 		default:
 			//something went wrong add a throw here
