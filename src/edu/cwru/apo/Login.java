@@ -33,6 +33,9 @@ public class Login extends Activity implements OnClickListener{
 		{
 		case R.id.login:
 			// check login credentials
+			Intent homeIntent = new Intent(Login.this, Home.class);
+			Login.this.startActivity(homeIntent);
+			finish();
 			break;
 		case R.id.forgot_password:
 			//start forgot password activity
