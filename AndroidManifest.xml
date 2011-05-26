@@ -16,6 +16,10 @@
         <activity android:name=".Login"></activity>
         <activity android:name=".ForgotPassword"></activity>
         <activity android:name=".Home"></activity>
+        <activity android:name=".Contract"></activity>
+        <activity android:name=".Directory"></activity>
+        <activity android:name=".News"></activity>
+        <activity android:name=".Profile"></activity>
 
     </application>
 </manifest>
