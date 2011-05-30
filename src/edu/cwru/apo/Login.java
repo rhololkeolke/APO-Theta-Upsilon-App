@@ -1,6 +1,8 @@
 package edu.cwru.apo;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,29 +11,19 @@ import java.util.Map;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.params.HttpProtocolParams;
-import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -78,15 +70,54 @@ public class Login extends Activity implements OnClickListener{
 			Map<String, String> kvPairs = new HashMap<String, String>();
 			kvPairs.put("method", "login");
 			kvPairs.put("user", username.getText().toString());
-			kvPairs.put("pass", password.getText().toString());
+			kvPairs.put("pass", md5(password.getText().toString()));
 			kvPairs.put("submitLogin", "1");
 			try {
 				HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
 				HttpEntity httpEntity = httpResponse.getEntity();
 				String result = EntityUtils.toString(httpEntity);
 				JSONObject jObject = new JSONObject(result);
-				Toast toast = Toast.makeText(getApplicationContext(), jObject.getString("loginResult"), Toast.LENGTH_LONG);
-				toast.show();
+				String loginResult = jObject.getString("loginResult");
+				if(loginResult.compareTo("valid login") == 0)
+				{
+					// stores the username and password
+					SharedPreferences preferences = getSharedPreferences(PREF_FILE_NAME, MODE_PRIVATE);
+					SharedPreferences.Editor prefEditor = preferences.edit();
+					prefEditor.putString("username", username.getText().toString());
+					prefEditor.putString("passHash", md5(password.getText().toString()));
+					prefEditor.commit();
+					
+					// starts home screen activity
+					Intent homeIntent = new Intent(Login.this, Home.class);
+					Login.this.startActivity(homeIntent);
+					finish();
+				}
+				else if(loginResult.compareTo("invalid username") == 0)
+				{
+					String msg = "Invalid username.  Please check your username and try again";
+					Toast errorDialog = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
+					errorDialog.show();
+				}
+				else if(loginResult.compareTo("invalid login") == 0)
+				{
+					String msg = "Invalid Login.  Please check your password and try again";
+					Toast errorDialog = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
+					errorDialog.show();
+				}
+				else if(loginResult.compareTo("no user") == 0)
+				{
+					String msg = "No such user.  Please check your username and password again";
+					Toast errorDialog = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
+					errorDialog.show();
+				}
+				else
+				{
+					String msg = "Invalid response.  If the problem persists contact webmaster";
+					Toast errorDialog = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
+					errorDialog.show();
+				}
+				
+
 			} catch (ClientProtocolException e) {
 				Log.e("ClientProtocolException", e.getMessage());
 				e.printStackTrace();
@@ -97,16 +128,6 @@ public class Login extends Activity implements OnClickListener{
 				Log.e("JSONException", e.getMessage());
 				e.printStackTrace();
 			}
-			
-			/*SharedPreferences preferences = getSharedPreferences(PREF_FILE_NAME, MODE_PRIVATE);
-			SharedPreferences.Editor prefEditor = preferences.edit();
-			prefEditor.putString("username", username.getText().toString());
-			prefEditor.putString("passHash", password.getText().toString());
-			prefEditor.commit();
-			
-			Intent homeIntent = new Intent(Login.this, Home.class);
-			Login.this.startActivity(homeIntent);
-			finish();*/
 			break;
 		case R.id.forgot_password:
 			//start forgot password activity
@@ -134,26 +155,44 @@ public class Login extends Activity implements OnClickListener{
 	
 	public static HttpResponse doPost(HttpClient httpClient, String url, Map<String, String> kvPairs)
 		throws ClientProtocolException, IOException
-		{
-		   HttpPost httppost = new HttpPost(url); 
+	{
+	   HttpPost httppost = new HttpPost(url); 
 
-		   if (kvPairs != null && kvPairs.isEmpty() == false) {
-		       List<NameValuePair> nameValuePairs =
-		                new ArrayList<NameValuePair>(kvPairs.size());
-		       String k, v;
-		       Iterator<String> itKeys = kvPairs.keySet().iterator(); 
+	   if (kvPairs != null && kvPairs.isEmpty() == false) {
+	       List<NameValuePair> nameValuePairs =
+	                new ArrayList<NameValuePair>(kvPairs.size());
+	       String k, v;
+	       Iterator<String> itKeys = kvPairs.keySet().iterator(); 
 
-		       while (itKeys.hasNext()) {
-		              k = itKeys.next();
-		              v = kvPairs.get(k);
-		              nameValuePairs.add(new BasicNameValuePair(k, v));
-		       } 
+	       while (itKeys.hasNext()) {
+	              k = itKeys.next();
+	              v = kvPairs.get(k);
+	              nameValuePairs.add(new BasicNameValuePair(k, v));
+	       } 
 
-		       httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-		   } 
+	       httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+	   } 
 
-		   HttpResponse response;
-		   response = httpClient.execute(httppost); return response;
-		}
+	   HttpResponse response;
+	   response = httpClient.execute(httppost); return response;
+	}
+	
+	private String md5(String in) {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("MD5");
+            digest.reset();
+            digest.update(in.getBytes());
+            byte[] a = digest.digest();
+            int len = a.length;
+            StringBuilder sb = new StringBuilder(len << 1);
+            for (int i = 0; i < len; i++) {
+                sb.append(Character.forDigit((a[i] & 0xf0) >> 4, 16));
+                sb.append(Character.forDigit(a[i] & 0x0f, 16));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) { e.printStackTrace(); }
+        return null;
+    }
 
 }
