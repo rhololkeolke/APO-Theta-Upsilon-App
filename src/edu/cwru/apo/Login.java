@@ -2,6 +2,7 @@ package edu.cwru.apo;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -13,6 +14,8 @@ public class Login extends Activity implements OnClickListener{
 	private Button forgot_btn;
 	private EditText username;
 	private EditText password;
+	
+	public static final String PREF_FILE_NAME = "PrefFile";
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -26,13 +29,26 @@ public class Login extends Activity implements OnClickListener{
 		forgot_btn = (Button)findViewById(R.id.forgot_password);
 		forgot_btn.setOnClickListener(this);
 		
+		username = (EditText)findViewById(R.id.username);
+		password = (EditText)findViewById(R.id.password);
+		
 	}
 
 	public void onClick(View v) {
 		switch(v.getId())
 		{
 		case R.id.login:
-			// check login credentials
+			/* need to implement checking of login credentials
+			 currently saves whatever values are input into username and password
+			 If there are input values saved when the app starts then it will bypass the login screen
+			 */
+			
+			SharedPreferences preferences = getSharedPreferences(PREF_FILE_NAME, MODE_PRIVATE);
+			SharedPreferences.Editor prefEditor = preferences.edit();
+			prefEditor.putString("username", username.getText().toString());
+			prefEditor.putString("passHash", password.getText().toString());
+			prefEditor.commit();
+			
 			Intent homeIntent = new Intent(Login.this, Home.class);
 			Login.this.startActivity(homeIntent);
 			finish();
