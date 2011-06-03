@@ -1,11 +1,34 @@
 package edu.cwru.apo;
 
-public static class API{
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
-	public JSONObject login(String user, String pass)
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.content.Context;
+
+public class API{
+
+	public static JSONObject login(Context context, String user, String pass)
 	{
 		//add code for Login here
-		HttpClient httpClient = new TrustAPOHttpClient(getApplicationContext());
+		HttpClient httpClient = new TrustAPOHttpClient(context);
 		Map<String, String> kvPairs = new HashMap<String, String>();
 		kvPairs.put("method","login");
 		kvPairs.put("user",user);
@@ -18,13 +41,13 @@ public static class API{
 			JSONObject jObject = new JSONObject(result);
 			return jObject;
 		} catch(ClientProtocolException e) {
-			Log.e("ClientProtocolException", e.gotMessage());
+			//Log.e("ClientProtocolException", ((Object) e).gotMessage());
 			e.printStackTrace();
 		} catch(IOException e) {
-			Log.e("IOException", e.gotMessage());
+			//Log.e("IOException", ((Object) e).gotMessage());
 			e.printStackTrace();
 		} catch(JSONException e) {
-			Log.e("JSONException", e.gotMessage());
+			//Log.e("JSONException", ((Object) e).gotMessage());
 			e.printStackTrace();
 		}
 		return null;
@@ -33,9 +56,10 @@ public static class API{
 	public JSONObject getContract()
 	{
 		//add code for getting the Contract here
+		return null;
 	}
 
-	private String md5(String in)
+	public static String md5(String in)
 	{
 		MessageDigest digest;
 		try {
@@ -47,7 +71,7 @@ public static class API{
 			StringBuilder sb = new StringBuilder(len << 1);
 			for(int i = 0; i<len; i++)
 			{
-				sb.append(Character.forDigit((a[i] & 0xf0) >> 4, 16);
+				sb.append(Character.forDigit((a[i] & 0xf0) >> 4, 16));
 				sb.append(Character.forDigit(a[i] & 0x0f, 16));
 			}
 			return sb.toString();
