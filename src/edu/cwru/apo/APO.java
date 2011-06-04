@@ -16,6 +16,12 @@ public class APO extends Activity {
 	 private static final int STOPSPLASH = 0;
      //time in milliseconds
      private static final long SPLASHTIME = 3000;
+     
+     public static final String appKey = "changeThisKeyInFinalApp";
+
+	public static String secretKey;
+
+	public static String user;
          
      //handler for splash screen
      private Handler splashHandler = new Handler() {
@@ -36,6 +42,8 @@ public class APO extends Activity {
                          }
                          else
                          {
+                        	 secretKey = appKey + passHash;
+                        	 user = username;
                         	 Intent homeIntent = new Intent(APO.this, Home.class);
                         	 APO.this.startActivity(homeIntent);
                         	 finish();

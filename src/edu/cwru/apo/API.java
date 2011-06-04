@@ -1,13 +1,18 @@
 package edu.cwru.apo;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -21,9 +26,13 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 
-public class API{
+public class API extends Activity{
+
+	private static final int MODE_PRIVATE = 0x00000000;
 
 	public static JSONObject login(Context context, String user, String pass)
 	{
@@ -53,9 +62,35 @@ public class API{
 		return null;
 	}
 
-	public JSONObject getContract()
+	public static JSONObject getContract()
 	{
 		//add code for getting the Contract here
+		return null;
+	}
+	
+	public static JSONObject HMACTest(Context context)
+	{
+		HttpClient httpClient = new TrustAPOHttpClient(context);
+		Map<String, String> kvPairs = new HashMap<String, String>();
+		kvPairs.put("method", "HMACTest");
+		Calendar cal = Calendar.getInstance();
+		kvPairs.put("user", APO.user);
+		kvPairs.put("timestamp", String.valueOf(cal.getTimeInMillis()));
+
+		kvPairs.put("HMAC", HMAC(kvPairs)); // compute HMAC
+		try{
+			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
+			HttpEntity httpEntity = httpResponse.getEntity();
+			String result = EntityUtils.toString(httpEntity);
+			JSONObject jObject = new JSONObject(result);
+			return jObject;
+		} catch(ClientProtocolException e){
+			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
+		} catch(JSONException e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 
@@ -101,4 +136,37 @@ public class API{
 		return httpClient.execute(httpPost);
 	} 
 		
+	public static String HMAC(Map<String, String> kvPairs)
+	{
+		String v;
+		String data = "";
+		Iterator<String> itKeys = kvPairs.keySet().iterator();
+		
+		
+		while(itKeys.hasNext()){
+			v = kvPairs.get(itKeys.next());
+			data = data + v;
+		}        
+        
+	    SecretKeySpec sk = new SecretKeySpec(APO.secretKey.getBytes(), "HmacMD5");
+
+	    Mac mac;
+		try {
+			mac = Mac.getInstance("HmacMD5");
+		    mac.init(sk);
+
+		    byte[] result = mac.doFinal(data.getBytes());
+
+		    return new String(result);
+		    
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
 }

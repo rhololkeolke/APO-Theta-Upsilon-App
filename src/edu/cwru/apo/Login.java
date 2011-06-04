@@ -72,8 +72,12 @@ public class Login extends Activity implements OnClickListener{
 					String loginResult = jObject.getString("loginResult");
 					if(loginResult.compareTo("valid login") == 0)
 					{
+						// sets the secret key
+						APO.secretKey = APO.appKey + password.getText().toString();
+						APO.user = username.getText().toString();
+						
 						// stores the username and password
-						SharedPreferences preferences = getSharedPreferences(PREF_FILE_NAME, MODE_PRIVATE);
+						SharedPreferences preferences = getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE);
 						SharedPreferences.Editor prefEditor = preferences.edit();
 						prefEditor.putString("username", username.getText().toString());
 						prefEditor.putString("passHash", API.md5(password.getText().toString()));
