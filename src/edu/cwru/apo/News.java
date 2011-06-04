@@ -30,7 +30,7 @@ public class News extends Activity{
 				if((time - timestamp) < 1e-8)
 					equal = true;
 				String msg = "timestamp: " + timestamp + " time: " + time + " equal: " + equal + " difference: " + (timestamp-time);*/
-				text.setText(jObject.getString("timeStatus") + " " + jObject.getString("HMACStatus"));
+				text.setText(jObject.getString("timeStatus") + "\n" + jObject.getString("HMACStatus") + "\n" + jObject.getString("ServerHMAC") + "\n" + jObject.getString("ClientHMAC"));
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

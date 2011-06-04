@@ -78,6 +78,7 @@ public class API extends Activity{
 		kvPairs.put("timestamp", String.valueOf(cal.getTimeInMillis()));
 
 		kvPairs.put("HMAC", HMAC(kvPairs)); // compute HMAC
+		//kvPairs.put("HMAC", "3f5aa3a02e4e5d9a20fcab4f3bbd287e");
 		try{
 			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
 			HttpEntity httpEntity = httpResponse.getEntity();
@@ -156,8 +157,15 @@ public class API extends Activity{
 		    mac.init(sk);
 
 		    byte[] result = mac.doFinal(data.getBytes());
+		    int len = result.length;
+			StringBuilder sb = new StringBuilder(len << 1);
+			for(int i = 0; i<len; i++)
+			{
+				sb.append(Character.forDigit((result[i] & 0xf0) >> 4, 16));
+				sb.append(Character.forDigit(result[i] & 0x0f, 16));
+			}
+			return sb.toString();
 
-		    return new String(result);
 		    
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
