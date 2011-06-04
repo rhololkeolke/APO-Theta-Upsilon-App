@@ -1,5 +1,7 @@
 package edu.cwru.apo;
 
+import org.json.JSONException;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,6 +10,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 
 public class APO extends Activity {
@@ -31,24 +34,34 @@ public class APO extends Activity {
                      case STOPSPLASH:
                          SharedPreferences preferences  = getSharedPreferences(PREF_FILE_NAME, MODE_PRIVATE);
                          
-                         String username = preferences.getString("username", null);
-                         String passHash = preferences.getString("passHash", null);
-                         
-                         if(username == null || passHash == null)
-                         {
-                        	 Intent loginIntent = new Intent(APO.this, Login.class);
-                        	 APO.this.startActivity(loginIntent);
-                        	 finish();
-                         }
-                         else
-                         {
-                        	 secretKey = appKey;// + passHash;
-                        	 user = username;
-                        	 Intent homeIntent = new Intent(APO.this, Home.class);
-                        	 APO.this.startActivity(homeIntent);
-                        	 finish();
-                         }
-                         break;
+                         try {
+                        	 String requestStatus = API.login(getApplicationContext(), preferences).getString("requestStatus"); // run the login to reestablish session
+                        	 Bundle extras = new Bundle();
+								if(requestStatus.compareTo("valid login") == 0)
+								{
+									secretKey = appKey;
+									user = preferences.getString("username", null);
+		                        	Intent homeIntent = new Intent(APO.this, Home.class);
+		                        	APO.this.startActivity(homeIntent);
+		                        	finish();
+								}
+								else if(requestStatus.compareTo("missing username or passHash") == 0)
+								{
+									extras.putString("message", null);
+								}
+								else
+								{
+									extras.putString("message", "There was an error with your saved username/password. Please login again.");
+								}
+								Intent loginIntent = new Intent(APO.this,Login.class);
+								loginIntent.putExtras(extras);
+								APO.this.startActivity(loginIntent);
+								finish();
+						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						 }
+	                     break;
                      }
                      super.handleMessage(msg);
              }

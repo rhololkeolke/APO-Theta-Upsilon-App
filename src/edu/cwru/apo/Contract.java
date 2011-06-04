@@ -24,9 +24,13 @@ public class Contract extends Activity {
 		//List<String> results = new ArrayList<String>(); //use this to iterate automatically over returned values
 		try {
 			String requestStatus = jObject.getString("requestStatus");
-			//String totalHours = jObject.getString("totalHours");
-			
-			text.setText(requestStatus );//+ "\n" + totalHours);
+			if(requestStatus.compareTo("success") == 0)
+			{
+				String totalHours = jObject.getString("totalHours");
+				text.setText(requestStatus + "\n" + totalHours);
+			}
+			else
+				text.setText(requestStatus );
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

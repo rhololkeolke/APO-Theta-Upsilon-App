@@ -45,6 +45,13 @@ public class Login extends Activity implements OnClickListener{
 	{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.login);
+		
+		Bundle extras = getIntent().getExtras();
+		if(extras.get("message") != null)
+		{
+			Toast message = Toast.makeText(getApplicationContext(), extras.getString("message"), Toast.LENGTH_LONG);
+			message.show();
+		}
 		// map the login button to the layout
 		login_btn = (Button)findViewById(R.id.login);
 		login_btn.setOnClickListener(this);
@@ -69,8 +76,8 @@ public class Login extends Activity implements OnClickListener{
 			if(jObject != null)
 			{
 				try {
-					String loginResult = jObject.getString("loginResult");
-					if(loginResult.compareTo("valid login") == 0)
+					String requestStatus = jObject.getString("requestStatus");
+					if(requestStatus.compareTo("valid login") == 0)
 					{
 						// sets the secret key
 						APO.secretKey = APO.appKey;// + API.md5(password.getText().toString());
@@ -88,19 +95,19 @@ public class Login extends Activity implements OnClickListener{
 						Login.this.startActivity(homeIntent);
 						finish();
 					}
-					else if(loginResult.compareTo("invalid username") == 0)
+					else if(requestStatus.compareTo("invalid username") == 0)
 					{
 						String msg = "Invalid username.  Please check your username and try again";
 						Toast errorDialog = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
 						errorDialog.show();
 					}
-					else if(loginResult.compareTo("invalid login") == 0)
+					else if(requestStatus.compareTo("invalid login") == 0)
 					{
 						String msg = "Invalid Login.  Please check your password and try again";
 						Toast errorDialog = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
 						errorDialog.show();
 					}
-					else if(loginResult.compareTo("no user") == 0)
+					else if(requestStatus.compareTo("no user") == 0)
 					{
 						String msg = "No such user.  Please check your username and password again";
 						Toast errorDialog = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);

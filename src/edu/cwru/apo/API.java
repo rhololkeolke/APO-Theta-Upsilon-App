@@ -28,15 +28,18 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.widget.Toast;
 
 public class API extends Activity{
-
-	private static final int MODE_PRIVATE = 0x00000000;
-
-	public static JSONObject login(Context context, String user, String pass)
+	private static HttpClient httpClient = null;
+	
+	public static JSONObject login(Context context, String user, String pass) // used for initial logins
 	{
 		//add code for Login here
-		HttpClient httpClient = new TrustAPOHttpClient(context);
+		if(httpClient == null)
+			httpClient = new TrustAPOHttpClient(context);
+		
 		Map<String, String> kvPairs = new HashMap<String, String>();
 		kvPairs.put("method","login");
 		kvPairs.put("user",user);
@@ -60,10 +63,53 @@ public class API extends Activity{
 		}
 		return null;
 	}
+	
+	public static JSONObject login(Context context, SharedPreferences preferences) // used when restoring 
+	{
+		if(httpClient == null)
+			httpClient = new TrustAPOHttpClient(context);
+        
+        String username = preferences.getString("username", null);
+        String passHash = preferences.getString("passHash", null);
+        if(username == null || passHash == null)
+        {
+        	JSONObject jObject = new JSONObject();
+        	try {
+				jObject.put("requestStatus", "missing username or passHash");
+				return jObject;
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+		Map<String, String> kvPairs = new HashMap<String, String>();
+		kvPairs.put("method", "login");
+		kvPairs.put("user", username);
+		kvPairs.put("pass", passHash);
+		kvPairs.put("submitLogin", "1");
+		try{
+			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
+			HttpEntity httpEntity = httpResponse.getEntity();
+			String result = EntityUtils.toString(httpEntity);
+			JSONObject jObject = new JSONObject(result);
+			return jObject;
+		} catch(ClientProtocolException e) {
+			//Log.e("ClientProtocolException", ((Object) e).gotMessage());
+			e.printStackTrace();
+		} catch(IOException e) {
+			//Log.e("IOException", ((Object) e).gotMessage());
+			e.printStackTrace();
+		} catch(JSONException e) {
+			//Log.e("JSONException", ((Object) e).gotMessage());
+			e.printStackTrace();
+		}
+		return null;
+	}
 
 	public static JSONObject getContract(Context context)
 	{
-		HttpClient httpClient = new TrustAPOHttpClient(context);
+		if(httpClient == null)
+			httpClient = new TrustAPOHttpClient(context);
 		Map<String, String> kvPairs = new HashMap<String, String>();
 		kvPairs.put("method", "getContract");
 		kvPairs.put("user", APO.user);
@@ -88,7 +134,8 @@ public class API extends Activity{
 	
 	public static JSONObject HMACTest(Context context)
 	{
-		HttpClient httpClient = new TrustAPOHttpClient(context);
+		if(httpClient == null)
+			httpClient = new TrustAPOHttpClient(context);
 		Map<String, String> kvPairs = new HashMap<String, String>();
 		kvPairs.put("method", "HMACTest");
 		kvPairs.put("user", APO.user);
@@ -192,6 +239,5 @@ public class API extends Activity{
 
 		
 		return null;
-		//return data;
 	}
 }
