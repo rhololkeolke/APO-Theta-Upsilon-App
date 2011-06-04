@@ -73,7 +73,7 @@ public class Login extends Activity implements OnClickListener{
 					if(loginResult.compareTo("valid login") == 0)
 					{
 						// sets the secret key
-						APO.secretKey = APO.appKey + password.getText().toString();
+						APO.secretKey = APO.appKey;// + API.md5(password.getText().toString());
 						APO.user = username.getText().toString();
 						
 						// stores the username and password

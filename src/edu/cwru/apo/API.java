@@ -28,7 +28,6 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 
 public class API extends Activity{
 
@@ -62,9 +61,28 @@ public class API extends Activity{
 		return null;
 	}
 
-	public static JSONObject getContract()
+	public static JSONObject getContract(Context context)
 	{
-		//add code for getting the Contract here
+		HttpClient httpClient = new TrustAPOHttpClient(context);
+		Map<String, String> kvPairs = new HashMap<String, String>();
+		kvPairs.put("method", "getContract");
+		kvPairs.put("user", APO.user);
+		Calendar cal = Calendar.getInstance();
+		kvPairs.put("timestamp", String.valueOf(cal.getTimeInMillis()));
+		kvPairs.put("HMAC", HMAC(kvPairs));
+		try{
+			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
+			HttpEntity httpEntity = httpResponse.getEntity();
+			String result = EntityUtils.toString(httpEntity);
+			JSONObject jObject = new JSONObject(result);
+			return jObject;
+		} catch(ClientProtocolException e){
+			e.printStackTrace();
+		} catch(IOException e) {
+			e.printStackTrace();
+		} catch(JSONException e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 	
@@ -73,12 +91,10 @@ public class API extends Activity{
 		HttpClient httpClient = new TrustAPOHttpClient(context);
 		Map<String, String> kvPairs = new HashMap<String, String>();
 		kvPairs.put("method", "HMACTest");
-		Calendar cal = Calendar.getInstance();
 		kvPairs.put("user", APO.user);
+		Calendar cal = Calendar.getInstance();
 		kvPairs.put("timestamp", String.valueOf(cal.getTimeInMillis()));
-
-		kvPairs.put("HMAC", HMAC(kvPairs)); // compute HMAC
-		//kvPairs.put("HMAC", "3f5aa3a02e4e5d9a20fcab4f3bbd287e");
+		kvPairs.put("HMAC", HMAC(kvPairs));
 		try{
 			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
 			HttpEntity httpEntity = httpResponse.getEntity();
@@ -132,6 +148,7 @@ public class API extends Activity{
 			}
 
 			httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+
 		}
 
 		return httpClient.execute(httpPost);
@@ -146,13 +163,13 @@ public class API extends Activity{
 		
 		while(itKeys.hasNext()){
 			v = kvPairs.get(itKeys.next());
-			data = data + v;
+			data = v + data;
 		}        
         
-	    SecretKeySpec sk = new SecretKeySpec(APO.secretKey.getBytes(), "HmacMD5");
-
-	    Mac mac;
+	   SecretKeySpec sk;
 		try {
+			sk = new SecretKeySpec(APO.secretKey.getBytes(), "HmacMD5");
+			Mac mac;
 			mac = Mac.getInstance("HmacMD5");
 		    mac.init(sk);
 
@@ -165,16 +182,16 @@ public class API extends Activity{
 				sb.append(Character.forDigit(result[i] & 0x0f, 16));
 			}
 			return sb.toString();
-
-		    
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (InvalidKeyException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+
 		
 		return null;
+		//return data;
 	}
 }

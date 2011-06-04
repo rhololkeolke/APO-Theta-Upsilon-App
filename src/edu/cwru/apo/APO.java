@@ -42,7 +42,7 @@ public class APO extends Activity {
                          }
                          else
                          {
-                        	 secretKey = appKey + passHash;
+                        	 secretKey = appKey;// + passHash;
                         	 user = username;
                         	 Intent homeIntent = new Intent(APO.this, Home.class);
                         	 APO.this.startActivity(homeIntent);
