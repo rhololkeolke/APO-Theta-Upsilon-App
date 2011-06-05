@@ -24,13 +24,7 @@ public class News extends Activity{
 		if(jObject != null)
 		{
 			try{
-				/*double timestamp = jObject.getDouble("timestamp")/1000000000000.0;
-				double time = jObject.getDouble("time")/1000000000;
-				boolean equal = false;
-				if((time - timestamp) < 1e-8)
-					equal = true;
-				String msg = "timestamp: " + timestamp + " time: " + time + " equal: " + equal + " difference: " + (timestamp-time);*/
-				text.setText(jObject.getString("timeStatus") + "\n" + jObject.getString("HMACStatus") + "\n" + jObject.getString("ServerHMAC") + "\n" + jObject.getString("ClientHMAC"));
+				text.setText(jObject.getString("timeStatus") + "\n" + jObject.getString("HMACStatus") + "\n" + jObject.getString("ServerHMAC") + "\n" + jObject.getString("ClientHMAC") + "\n" + jObject.getString("Session ID"));
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

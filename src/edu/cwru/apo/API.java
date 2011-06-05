@@ -29,7 +29,6 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.widget.Toast;
 
 public class API extends Activity{
 	private static HttpClient httpClient = null;
