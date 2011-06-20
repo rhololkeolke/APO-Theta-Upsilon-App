@@ -87,7 +87,7 @@ public class Login extends Activity implements OnClickListener{
 						SharedPreferences preferences = getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE);
 						SharedPreferences.Editor prefEditor = preferences.edit();
 						prefEditor.putString("username", username.getText().toString());
-						prefEditor.putString("passHash", API.md5(password.getText().toString()));
+						prefEditor.putString("passHash", Auth.md5(password.getText().toString()));
 						prefEditor.commit();
 							
 						// starts home screen activity

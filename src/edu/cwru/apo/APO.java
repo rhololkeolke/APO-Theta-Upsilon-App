@@ -1,6 +1,7 @@
 package edu.cwru.apo;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -35,7 +36,14 @@ public class APO extends Activity {
                          SharedPreferences preferences  = getSharedPreferences(PREF_FILE_NAME, MODE_PRIVATE);
                          
                          try {
-                        	 String requestStatus = API.login(getApplicationContext(), preferences).getString("requestStatus"); // run the login to reestablish session
+                        	 JSONObject jObject = API.login(getApplicationContext(), preferences);
+                        	 if(jObject == null) // if there was a problem with the request
+                        	 {
+                        		Toast webError = Toast.makeText(getApplicationContext(), "Error contacting webserver.  Check your connection.  If problem persists contact webmaster", Toast.LENGTH_SHORT);
+                        	 	webError.show();
+                        	 	break;
+                        	 }
+                        	 String requestStatus = jObject.getString("requestStatus"); // run the login to reestablish session
                         	 Bundle extras = new Bundle();
 								if(requestStatus.compareTo("valid login") == 0)
 								{
@@ -44,19 +52,22 @@ public class APO extends Activity {
 		                        	Intent homeIntent = new Intent(APO.this, Home.class);
 		                        	APO.this.startActivity(homeIntent);
 		                        	finish();
-								}
-								else if(requestStatus.compareTo("missing username or passHash") == 0)
-								{
-									extras.putString("message", null);
-								}
+								} 
 								else
 								{
-									extras.putString("message", "There was an error with your saved username/password. Please login again.");
+									if(requestStatus.compareTo("missing username or passHash") == 0)
+									{
+										extras.putString("message", null);
+									}
+									else
+									{
+										extras.putString("message", "There was an error with your saved username/password. Please login again.");
+									}
+									Intent loginIntent = new Intent(APO.this,Login.class);
+									loginIntent.putExtras(extras);
+									APO.this.startActivity(loginIntent);
+									finish();
 								}
-								Intent loginIntent = new Intent(APO.this,Login.class);
-								loginIntent.putExtras(extras);
-								APO.this.startActivity(loginIntent);
-								finish();
 						} catch (JSONException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();

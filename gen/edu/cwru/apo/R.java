@@ -30,8 +30,9 @@ public final class R {
         public static final int login=0x7f070009;
         public static final int newsText=0x7f07000b;
         public static final int password=0x7f070008;
+        public static final int profileText=0x7f07000c;
         public static final int reset_btn=0x7f070004;
-        public static final int splash=0x7f07000c;
+        public static final int splash=0x7f07000d;
         public static final int textView1=0x7f070001;
         public static final int textView2=0x7f070007;
         public static final int username=0x7f070006;
@@ -48,7 +49,8 @@ public final class R {
         public static final int splash_screen=0x7f030007;
     }
     public static final class raw {
-        public static final int keystore=0x7f040000;
+        public static final int id_rsa=0x7f040000;
+        public static final int keystore=0x7f040001;
     }
     public static final class string {
         public static final int app_name=0x7f060001;

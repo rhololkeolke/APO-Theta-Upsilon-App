@@ -42,7 +42,7 @@ public class API extends Activity{
 		Map<String, String> kvPairs = new HashMap<String, String>();
 		kvPairs.put("method","login");
 		kvPairs.put("user",user);
-		kvPairs.put("pass", md5(pass));
+		kvPairs.put("pass", Auth.md5(pass));
 		kvPairs.put("submitLogin", "1");
 		try{
 			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
@@ -114,7 +114,7 @@ public class API extends Activity{
 		kvPairs.put("user", APO.user);
 		Calendar cal = Calendar.getInstance();
 		kvPairs.put("timestamp", String.valueOf(cal.getTimeInMillis()));
-		kvPairs.put("HMAC", HMAC(kvPairs));
+		kvPairs.put("HMAC", Auth.HMAC(kvPairs, APO.secretKey));
 		try{
 			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
 			HttpEntity httpEntity = httpResponse.getEntity();
@@ -140,7 +140,7 @@ public class API extends Activity{
 		kvPairs.put("user", APO.user);
 		Calendar cal = Calendar.getInstance();
 		kvPairs.put("timestamp", String.valueOf(cal.getTimeInMillis()));
-		kvPairs.put("HMAC", HMAC(kvPairs));
+		kvPairs.put("HMAC", Auth.HMAC(kvPairs, APO.secretKey));
 		try{
 			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
 			HttpEntity httpEntity = httpResponse.getEntity();
@@ -152,28 +152,6 @@ public class API extends Activity{
 		} catch(IOException e) {
 			e.printStackTrace();
 		} catch(JSONException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	public static String md5(String in)
-	{
-		MessageDigest digest;
-		try {
-			digest = MessageDigest.getInstance("MD5");
-			digest.reset();
-			digest.update(in.getBytes());
-			byte[] a = digest.digest();
-			int len = a.length;
-			StringBuilder sb = new StringBuilder(len << 1);
-			for(int i = 0; i<len; i++)
-			{
-				sb.append(Character.forDigit((a[i] & 0xf0) >> 4, 16));
-				sb.append(Character.forDigit(a[i] & 0x0f, 16));
-			}
-			return sb.toString();
-		} catch(NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 		return null;
@@ -198,45 +176,5 @@ public class API extends Activity{
 		}
 
 		return httpClient.execute(httpPost);
-	} 
-		
-	public static String HMAC(Map<String, String> kvPairs)
-	{
-		String v;
-		String data = "";
-		Iterator<String> itKeys = kvPairs.keySet().iterator();
-		
-		
-		while(itKeys.hasNext()){
-			v = kvPairs.get(itKeys.next());
-			data = v + data;
-		}        
-        
-	   SecretKeySpec sk;
-		try {
-			sk = new SecretKeySpec(APO.secretKey.getBytes(), "HmacMD5");
-			Mac mac;
-			mac = Mac.getInstance("HmacMD5");
-		    mac.init(sk);
-
-		    byte[] result = mac.doFinal(data.getBytes());
-		    int len = result.length;
-			StringBuilder sb = new StringBuilder(len << 1);
-			for(int i = 0; i<len; i++)
-			{
-				sb.append(Character.forDigit((result[i] & 0xf0) >> 4, 16));
-				sb.append(Character.forDigit(result[i] & 0x0f, 16));
-			}
-			return sb.toString();
-		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		
-		return null;
 	}
 }
