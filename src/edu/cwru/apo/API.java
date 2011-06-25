@@ -1,37 +1,18 @@
 package edu.cwru.apo;
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.cwru.apo.RestClient.RequestMethod;
+
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.os.AsyncTask;
 
 public class API extends Activity{
-	private static HttpClient httpClient = null;
+	/*private static HttpClient httpClient = null;
 	
 	public static JSONObject login(Context context, String user, String pass) // used for initial logins
 	{
@@ -111,10 +92,10 @@ public class API extends Activity{
 			httpClient = new TrustAPOHttpClient(context);
 		Map<String, String> kvPairs = new HashMap<String, String>();
 		kvPairs.put("method", "getContract");
-		kvPairs.put("user", APO.user);
+		//kvPairs.put("user", APO.user);
 		Calendar cal = Calendar.getInstance();
 		kvPairs.put("timestamp", String.valueOf(cal.getTimeInMillis()));
-		kvPairs.put("HMAC", Auth.HMAC(kvPairs, APO.secretKey));
+		//kvPairs.put("HMAC", Auth.HMAC(kvPairs, APO.secretKey));
 		try{
 			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
 			HttpEntity httpEntity = httpResponse.getEntity();
@@ -137,10 +118,10 @@ public class API extends Activity{
 			httpClient = new TrustAPOHttpClient(context);
 		Map<String, String> kvPairs = new HashMap<String, String>();
 		kvPairs.put("method", "HMACTest");
-		kvPairs.put("user", APO.user);
+		//kvPairs.put("user", APO.user);
 		Calendar cal = Calendar.getInstance();
 		kvPairs.put("timestamp", String.valueOf(cal.getTimeInMillis()));
-		kvPairs.put("HMAC", Auth.HMAC(kvPairs, APO.secretKey));
+		//kvPairs.put("HMAC", Auth.HMAC(kvPairs, APO.secretKey));
 		try{
 			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
 			HttpEntity httpEntity = httpResponse.getEntity();
@@ -176,5 +157,132 @@ public class API extends Activity{
 		}
 
 		return httpClient.execute(httpPost);
+	}*/
+	
+	private static HttpClient httpClient = null; // this is static so that the session isn't broken
+	private static String url = "https://apo.case.edu/api/api.php";
+	
+	private Context context;
+	
+	public enum Methods {login, checkCredentials, getContract, phone, serviceReport};
+	
+	public API(Context context)
+	{
+		this.context = context;
+		if(httpClient == null)
+			httpClient = new TrustAPOHttpClient(this.context); // context leak?
 	}
+	
+	public void callMethod(Methods method, AsyncRestRequestListener<Methods, JSONObject> callback, String...params)
+	{
+		switch(method)
+		{
+		case login:
+			// set up a login request
+			break;
+		case checkCredentials:
+			// set up a checkCredentials request
+			ApiCall call = new ApiCall(context, callback, method);
+			RestClient restClient = new RestClient(url, httpClient, RequestMethod.POST);
+			
+			// see if HMAC and AES key exist
+			if(!Auth.HmacKeyExists() || !Auth.AesKeyExists())
+			{
+				call.execute(restClient);
+				break;
+			}
+			
+			// if both exist add parameters to call and execute
+			restClient.AddParam("method", "checkCredentials");
+			restClient.AddParam("installID", Installation.id(context));
+			restClient.AddParam("timestamp", Long.toString(Auth.getTimestamp()));
+			restClient.AddParam("hmac", Auth.getHmac(restClient));
+			restClient.AddParam("otp", Auth.getOtp());
+			call.execute(restClient);
+			
+			// execute call
+			break;
+		case getContract:
+			// set up a getContract request
+			break;
+		case phone:
+			// set up a phone request
+			break;
+		case serviceReport:
+			// set up a serviceReport request
+			break;
+		}
+	}
+	
+	private class ApiCall extends AsyncTask<RestClient, Void, JSONObject>
+	{
+		
+		private Context context;
+		private AsyncRestRequestListener<Methods,JSONObject> callback;
+		private String progTitle;
+		private String progMsg;
+		private Methods method;
+		
+		private ProgressDialog progDialog;
+		
+		// constructor used when no progress dialog is desired
+		public ApiCall(Context context, AsyncRestRequestListener<Methods,JSONObject> cb, Methods method)
+		{
+			this.context = context;
+			this.callback = cb;
+			this.method = method;
+		}
+		
+		// constructor used when progress dialog is desired
+		public ApiCall(Context context, AsyncRestRequestListener<Methods,JSONObject> cb, Methods method, String title, String message)
+		{
+			this.context = context;
+			this.callback = cb;
+			this.method = method;
+			this.progTitle = title;
+			this.progMsg = message;
+		}
+		
+		@Override
+		protected void onPreExecute()
+		{
+			// if message and title were specified start progress dialog
+			if((progTitle != null) && (progMsg != null))
+			{
+				progDialog = ProgressDialog.show(context, progTitle, progMsg);
+			}
+		}
+
+		@Override
+		protected JSONObject doInBackground(RestClient... params) {
+			// start the requests
+			JSONObject jObject = null;
+			try {
+				params[0].Execute(); // only ever expect one param.  If there are more ignore them
+				jObject = new JSONObject(params[0].getResponse()); // convert the response to a JSON object
+				
+				// put a default response in the case that the web server returned nothing
+				if(jObject == null)
+					jObject.put("requestStatus", params[0].getErrorMessage());
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return jObject;
+		}
+		
+		@Override
+		protected void onPostExecute(JSONObject result)
+		{
+			//dismiss the progress dialog
+			if(progDialog != null)
+				progDialog.cancel();
+			
+			// initiate the callback
+			callback.onRestRequestComplete(method, result);
+		}
+		
+	}
+	
+	
 }

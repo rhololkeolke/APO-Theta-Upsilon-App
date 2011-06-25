@@ -20,16 +20,6 @@ public class News extends Activity{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.news);
 		text = (TextView)findViewById(R.id.newsText);
-		JSONObject jObject = API.HMACTest(getApplicationContext());
-		if(jObject != null)
-		{
-			try{
-				text.setText(jObject.getString("timeStatus") + "\n" + jObject.getString("HMACStatus") + "\n" + jObject.getString("ServerHMAC") + "\n" + jObject.getString("ClientHMAC") + "\n" + jObject.getString("Session ID"));
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
 	}
 
 }

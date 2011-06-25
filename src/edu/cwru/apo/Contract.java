@@ -20,22 +20,6 @@ public class Contract extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.contract);
 		text = (TextView)findViewById(R.id.contractText);
-		JSONObject jObject = API.getContract(getApplicationContext());
-		//List<String> results = new ArrayList<String>(); //use this to iterate automatically over returned values
-		try {
-			String requestStatus = jObject.getString("requestStatus");
-			if(requestStatus.compareTo("success") == 0)
-			{
-				String totalHours = jObject.getString("totalHours");
-				text.setText(requestStatus + "\n" + totalHours);
-			}
-			else
-				text.setText(requestStatus );
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 	}
 
 }

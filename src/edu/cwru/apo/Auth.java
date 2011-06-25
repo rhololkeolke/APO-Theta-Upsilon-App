@@ -1,28 +1,25 @@
 package edu.cwru.apo;
 
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PublicKey;
-import java.security.SecureRandom;
+import java.util.Calendar;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.http.NameValuePair;
 
 import android.util.Base64;
 
 public class Auth {
 	
-	private static String	digits = "0123456789abcdef";
+	/*private static String	digits = "0123456789abcdef";
 	private static String OTP;
 	public static SecretKey AESKey;
 	public static SecretKeySpec AESKeySpec;
@@ -204,6 +201,126 @@ public class Auth {
 	 private final static String HEX = "0123456789ABCDEF";
 	 private static void appendHex(StringBuffer sb, byte b) {
 	         sb.append(HEX.charAt((b>>4)&0x0f)).append(HEX.charAt(b&0x0f));
-	 }
+	 }*/
+	
+	private static byte[] AesKey = null;
+	private static byte[] lastOtp = null;
+	private static byte[] HmacKey = null;
+	
+	//returns true is an HMAC key is set
+	// false otherwise
+	public static boolean HmacKeyExists()
+	{
+		if(HmacKey != null)
+			return true;
+		return false;
+		
+	}
+	
+	// returns true if an AES key is set
+	// false otherwise
+	public static boolean AesKeyExists()
+	{
+		if(AesKey != null)
+			return true;
+		return false;
+	}
+	
+	// generates an HMAC for all the parameters currently in the client
+	public static String getHmac(RestClient client)
+	{
+		// get the parameters currently in the client
+		List<NameValuePair> params = client.getParams();
+		
+		//concatenate all of the data
+		Iterator<NameValuePair> iter = params.iterator();
+		String data = "";
+		while(iter.hasNext())
+			data = data + iter.next().getValue();
+		
+		//generate the HMAC based on the concatenated data
+		SecretKeySpec sk;
+		try {
+			if(HmacKey == null)
+				return null;
+			sk = new SecretKeySpec(HmacKey, "HmacMD5");
+			Mac mac;
+			mac = Mac.getInstance("HmacMD5");
+		    mac.init(sk);
+
+		    return Base64.encodeToString(mac.doFinal(data.getBytes()), Base64.DEFAULT);
+		    
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+
+	// returns a new OTP
+	public static String getOtp()
+	{
+		// make sure there is a key to use
+		if(AesKey == null)
+			return null;
+		
+		// encrypt the last OTP
+		byte[] encrypted = AesEncrypt(lastOtp);
+		
+		// encrypt will return the input if an error occurs
+		// Have to make sure the data was actually encrypted
+		if(encrypted == lastOtp)
+			return null;
+		
+		// everything went okay
+		// update the OTP and return it in Base64 encoded form
+		lastOtp = encrypted;
+		return Base64.encodeToString(lastOtp, Base64.DEFAULT);
+	}
+	
+	// generates an AES key of length size
+	public static void generateAesKey(int size)
+	{
+		
+	}
+
+	// returns the number of milliseconds since 1970
+	public static long getTimestamp()
+	{
+		Calendar cal = Calendar.getInstance();
+		return cal.getTimeInMillis();
+	}
+	
+	private static byte[] AesEncrypt(byte[] input)
+	{
+		SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
+		Cipher cipher;
+		try {
+			cipher = Cipher.getInstance("AES");
+			cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+			return cipher.doFinal(input);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return input;
+		
+	}
 
 }

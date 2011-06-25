@@ -3,6 +3,8 @@ package edu.cwru.apo;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.cwru.apo.API.Methods;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,8 +16,8 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 
-public class APO extends Activity {
-	 public static final String PREF_FILE_NAME = "PrefFile";
+public class APO extends Activity implements AsyncRestRequestListener<API.Methods,JSONObject>{
+	/* public static final String PREF_FILE_NAME = "PrefFile";
 	
 	 private static final int STOPSPLASH = 0;
      //time in milliseconds
@@ -78,7 +80,6 @@ public class APO extends Activity {
              }
      };
      
-    /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,6 +95,78 @@ public class APO extends Activity {
         msg.what = STOPSPLASH;
         splashHandler.sendMessageDelayed(msg, SPLASHTIME);
 
-    }
+    }*/
+	
+	private static final long SPLASHTIME = 3000;
+	private static long STARTTIME = 0;
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState)
+	{
+		super.onCreate(savedInstanceState);
+        
+        // removes title bar on app, making image full screen
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        
+        setContentView(R.layout.splash_screen);
+        
+        //start Async Web Call here
+        STARTTIME = Auth.getTimestamp();
+        API api = new API(getApplicationContext());
+        api.callMethod(Methods.checkCredentials, this, (String[])null);
+        
+	}
+	
+	public void onRestRequestComplete(API.Methods method, JSONObject result)
+	{
+		// check and see if the splash screen has been shown for the minimum amount of time
+		// NOTE: This would probably be better done with a timer.  Need to change this
+		while(Auth.getTimestamp()-STARTTIME < SPLASHTIME)
+		{
+			// do nothing.  This is probably not the right way to do this
+		}
+		
+		// set the next activity to default Login
+		Intent nextActivity = new Intent(APO.this, Login.class);
+		Bundle extras = new Bundle();
+		
+		if(method == Methods.checkCredentials)
+		{
+			if(result != null)
+			{
+				try {
+					if(result.getString("requestStatus").compareTo("valid") == 0)
+					{
+						//change the nextActivity to Home
+						nextActivity = new Intent(APO.this, Home.class);
+					}
+					else
+					{
+						extras.putString("msg", "Credentials are invalid");
+					}
+					
+				} catch (JSONException e) {
+					extras.putString("msg", "Invalid JSON response");
+					e.printStackTrace();
+				}
+			}
+			else
+			{
+				extras.putString("msg", "Could not contact web server.  Please Check your connection");
+
+			}
+		}
+		else
+		{
+			extras.putString("msg", "Invalid method called");
+		}
+		
+		nextActivity.putExtras(extras);
+		
+		// start the next activity
+		APO.this.startActivity(nextActivity);
+		finish();
+	}
 	
 }

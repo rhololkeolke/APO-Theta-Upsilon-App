@@ -47,9 +47,9 @@ public class Login extends Activity implements OnClickListener{
 		setContentView(R.layout.login);
 		
 		Bundle extras = getIntent().getExtras();
-		if(extras.get("message") != null)
+		if(extras.get("msg") != null)
 		{
-			Toast message = Toast.makeText(getApplicationContext(), extras.getString("message"), Toast.LENGTH_LONG);
+			Toast message = Toast.makeText(getApplicationContext(), extras.getString("msg"), Toast.LENGTH_LONG);
 			message.show();
 		}
 		// map the login button to the layout
@@ -71,7 +71,7 @@ public class Login extends Activity implements OnClickListener{
 			/* need to implement checking of login credentials
 			 currently saves whatever values are input into username and password
 			 If there are input values saved when the app starts then it will bypass the login screen
-			 */
+			 
 			JSONObject jObject = API.login(getApplicationContext(),username.getText().toString(),password.getText().toString());
 			if(jObject != null)
 			{
@@ -125,7 +125,7 @@ public class Login extends Activity implements OnClickListener{
 				}
 			
 				
-			}
+			}*/
 			break;
 		case R.id.forgot_password:
 			//start forgot password activity

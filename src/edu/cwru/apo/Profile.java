@@ -14,15 +14,5 @@ public class Profile extends Activity{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.profile);
 		text = (TextView)this.findViewById(R.id.profileText);
-		//Auth.generateAESKey(512);
-		try {
-			String encrypted = Auth.AESencrypt("seed", "test");
-			String decrypted = Auth.AESdecrypt("seed", encrypted);
-			text.setText(encrypted + "\n" + decrypted);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
 	}
 }
