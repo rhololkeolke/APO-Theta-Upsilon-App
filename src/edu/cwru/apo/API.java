@@ -173,34 +173,50 @@ public class API extends Activity{
 			httpClient = new TrustAPOHttpClient(this.context); // context leak?
 	}
 	
-	public void callMethod(Methods method, AsyncRestRequestListener<Methods, JSONObject> callback, String...params)
+	public boolean callMethod(Methods method, AsyncRestRequestListener<Methods, JSONObject> callback, String...params)
 	{
+		boolean result = false;
 		switch(method)
 		{
 		case login:
+			if(params.length != 2)
+				break;
 			// set up a login request
+			ApiCall loginCall = new ApiCall(context, callback, method, "Logging In", "Please Wait");
+			RestClient loginClient = new RestClient(url, httpClient, RequestMethod.POST);
+			
+			Auth.generateAesKey(512);
+			loginClient.AddParam("method", "login");
+			loginClient.AddParam("user", params[0]);
+			loginClient.AddParam("passHash", Auth.md5(params[1]));
+			loginClient.AddParam("AESkey", Auth.getAesKey(context));
+			loginClient.AddParam("installID", Installation.id(getApplicationContext()));
+			
+			//execute the call
+			loginCall.execute(loginClient);
+			result = true;
 			break;
 		case checkCredentials:
 			// set up a checkCredentials request
-			ApiCall call = new ApiCall(context, callback, method);
-			RestClient restClient = new RestClient(url, httpClient, RequestMethod.POST);
+			ApiCall checkCredentialsCall = new ApiCall(context, callback, method);
+			RestClient checkCredentialsClient = new RestClient(url, httpClient, RequestMethod.POST);
 			
-			// see if HMAC and AES key exist
+			// check if HMAC key and AES key exist
 			if(!Auth.HmacKeyExists() || !Auth.AesKeyExists())
 			{
-				call.execute(restClient);
 				break;
 			}
 			
 			// if both exist add parameters to call and execute
-			restClient.AddParam("method", "checkCredentials");
-			restClient.AddParam("installID", Installation.id(context));
-			restClient.AddParam("timestamp", Long.toString(Auth.getTimestamp()));
-			restClient.AddParam("hmac", Auth.getHmac(restClient));
-			restClient.AddParam("otp", Auth.getOtp());
-			call.execute(restClient);
+			checkCredentialsClient.AddParam("method", "checkCredentials");
+			checkCredentialsClient.AddParam("installID", Installation.id(context));
+			checkCredentialsClient.AddParam("timestamp", Long.toString(Auth.getTimestamp()));
+			checkCredentialsClient.AddParam("hmac", Auth.getHmac(checkCredentialsClient));
+			checkCredentialsClient.AddParam("otp", Auth.getOtp());
 			
-			// execute call
+			//execute the call
+			checkCredentialsCall.execute(checkCredentialsClient);
+			result = true;
 			break;
 		case getContract:
 			// set up a getContract request
@@ -212,6 +228,7 @@ public class API extends Activity{
 			// set up a serviceReport request
 			break;
 		}
+		return result;
 	}
 	
 	private class ApiCall extends AsyncTask<RestClient, Void, JSONObject>

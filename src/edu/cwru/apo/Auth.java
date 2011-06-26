@@ -1,7 +1,17 @@
 package edu.cwru.apo;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SecureRandom;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
@@ -9,12 +19,16 @@ import java.util.List;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.http.NameValuePair;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Base64;
 
 public class Auth {
@@ -123,17 +137,7 @@ public class Auth {
 		return null;
 	}
 	
-	private static String bytesToString(byte[] input)
-	{
-		int len = input.length;
-		StringBuilder sb = new StringBuilder(len << 1);
-		for(int i = 0; i<len; i++)
-		{
-			sb.append(Character.forDigit((input[i] & 0xf0) >> 4, 16));
-			sb.append(Character.forDigit(input[i] & 0x0f, 16));
-		}
-		return sb.toString();
-	}
+
 	
 	public static String AESencrypt(String seed, String cleartext) throws Exception {
 	         byte[] rawKey = getRawKey(seed.getBytes());
@@ -260,6 +264,20 @@ public class Auth {
 		
 		return null;
 	}
+	
+	public static void loadKeys(SharedPreferences prefs)
+	{
+        String Aes = prefs.getString("AesKey", null);
+        String Hmac = prefs.getString("HmacKey", null);
+        String Otp = prefs.getString("lastOtp", null);
+        
+        if((Aes != null) && (Hmac != null) && (Otp != null))
+        {
+        	AesKey = Base64.decode(AesKey, Base64.DEFAULT);
+        	HmacKey = Base64.decode(Hmac, Base64.DEFAULT);
+        	lastOtp = Base64.decode(Otp, Base64.DEFAULT);
+        }
+	}
 
 	// returns a new OTP
 	public static String getOtp()
@@ -282,10 +300,81 @@ public class Auth {
 		return Base64.encodeToString(lastOtp, Base64.DEFAULT);
 	}
 	
+	public static boolean setOtpAndHmac(String OTP)
+	{
+		lastOtp = Base64.decode(OTP, Base64.DEFAULT);
+		HmacKey = AesDecrypt(lastOtp);
+		if(HmacKey != lastOtp)
+			return true;
+		return false;
+	}
+	
 	// generates an AES key of length size
 	public static void generateAesKey(int size)
 	{
-		
+		KeyGenerator keyGen;
+		try {
+			keyGen = KeyGenerator.getInstance("AES");
+			SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+			random.setSeed(Auth.getTimestamp());
+			keyGen.init(size, random);
+			SecretKey key = keyGen.generateKey();
+			AesKey = key.getEncoded();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public static String getAesKey(Context context)
+	{
+		// load the RSA key from packaged file
+		RsaPublicKey rsaKey = new RsaPublicKey(context, "rsa_public_key.res");
+	    KeyFactory keyFactory;
+		try {
+			keyFactory = KeyFactory.getInstance("RSA", "BC");
+			RSAPublicKeySpec rsaKeySpec = new RSAPublicKeySpec(rsaKey.MODULUS, rsaKey.EXPONENT);
+			RSAPublicKey pubKey = (RSAPublicKey) keyFactory.generatePublic(rsaKeySpec);
+			
+			
+			//Set up the cipher to RSA encryption
+		    Cipher cipher = Cipher.getInstance("RSA/None/NoPadding", "BC");
+			cipher.init(Cipher.ENCRYPT_MODE, pubKey);
+			
+			// make sure the Aes Key is less than a block size
+			// otherwise major errors will occur
+			if(AesKey.length > rsaKey.MODULUS.bitLength())
+				return "Error: AesKey bigger than block size of RSA Key";
+			
+			byte[] encryptedKey = cipher.doFinal(AesKey);
+			
+			// return result Base64 encoded
+			return Base64.encodeToString(encryptedKey, Base64.DEFAULT);
+			
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchProviderException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	// returns the number of milliseconds since 1970
@@ -321,6 +410,85 @@ public class Auth {
 		}
 		return input;
 		
+	}
+	
+	private static byte[] AesDecrypt(byte[] input)
+	{
+		SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
+		Cipher cipher;
+		try {
+			cipher = Cipher.getInstance("AES");
+			cipher.init(Cipher.DECRYPT_MODE, keySpec);
+			return cipher.doFinal(input);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return input;
+	}
+	
+    private static class RsaPublicKey {
+        public BigInteger EXPONENT;
+        public BigInteger MODULUS;
+        public RsaPublicKey(Context context, String filename) {
+            InputStream in;
+			try {
+				in = context.getAssets().open(filename);
+	            String contents = new String();
+	            try {
+	                int c;
+	                while ((c = in.read()) != -1) {
+	                    contents += (char) c;
+	                }
+	            } catch (IOException e) {
+	                System.err.println("Could not read RSA key resource.");
+	            }
+	            int linebreak = contents.indexOf("\n");
+	            EXPONENT = new BigInteger(contents.substring(0, linebreak).trim());
+	            MODULUS = new BigInteger(contents.substring(linebreak + 1).trim());
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+        }
+    }
+    
+	public static String md5(String in)
+	{
+		MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance("MD5");
+			digest.reset();
+			digest.update(in.getBytes());
+			return bytesToString(digest.digest());
+		} catch(NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	private static String bytesToString(byte[] input)
+	{
+		int len = input.length;
+		StringBuilder sb = new StringBuilder(len << 1);
+		for(int i = 0; i<len; i++)
+		{
+			sb.append(Character.forDigit((input[i] & 0xf0) >> 4, 16));
+			sb.append(Character.forDigit(input[i] & 0x0f, 16));
+		}
+		return sb.toString();
 	}
 
 }

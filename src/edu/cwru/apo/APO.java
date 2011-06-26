@@ -100,6 +100,8 @@ public class APO extends Activity implements AsyncRestRequestListener<API.Method
 	private static final long SPLASHTIME = 3000;
 	private static long STARTTIME = 0;
 	
+	public static final String PREF_FILE_NAME = "PrefFile";
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
@@ -111,10 +113,21 @@ public class APO extends Activity implements AsyncRestRequestListener<API.Method
         
         setContentView(R.layout.splash_screen);
         
+        // load keys if they exist
+		Auth.loadKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
+        
         //start Async Web Call here
         STARTTIME = Auth.getTimestamp();
         API api = new API(getApplicationContext());
-        api.callMethod(Methods.checkCredentials, this, (String[])null);
+        if(!api.callMethod(Methods.checkCredentials, this, (String[])null))
+        {
+        	Intent loginIntent = new Intent(APO.this, Login.class);
+        	Bundle extras = new Bundle();
+        	extras.putString("msg", "No saved credentials");
+        	loginIntent.putExtras(extras);
+        	APO.this.startActivity(loginIntent);
+        	finish();
+        }
         
 	}
 	
@@ -141,20 +154,23 @@ public class APO extends Activity implements AsyncRestRequestListener<API.Method
 						//change the nextActivity to Home
 						nextActivity = new Intent(APO.this, Home.class);
 					}
+					else if(result.getString("requestStatus").compareTo("No response") == 0)
+					{
+						extras.putString("msg", "Could not contact web server. Please check your connection");
+					}
 					else
 					{
-						extras.putString("msg", "Credentials are invalid");
+						extras.putString("msg", "Invalid credentials");
 					}
 					
 				} catch (JSONException e) {
-					extras.putString("msg", "Invalid JSON response");
+					extras.putString("msg", "JSON error: Invalid JSON response");
 					e.printStackTrace();
 				}
 			}
 			else
 			{
-				extras.putString("msg", "Could not contact web server.  Please Check your connection");
-
+				extras.putString("msg", "JSON error: No JSON Object to read");
 			}
 		}
 		else
