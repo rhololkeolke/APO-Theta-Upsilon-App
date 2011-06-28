@@ -51,7 +51,7 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 		Bundle extras = getIntent().getExtras();
 		if(extras.get("msg") != null)
 		{
-			Toast message = Toast.makeText(getApplicationContext(), extras.getString("msg"), Toast.LENGTH_LONG);
+			Toast message = Toast.makeText(getApplicationContext(), extras.getString("msg"), Toast.LENGTH_SHORT);
 			message.show();
 		}
 		// map the login button to the layout
@@ -70,10 +70,11 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 		switch(v.getId())
 		{
 		case R.id.login:
-			API api = new API(getApplicationContext());
-			if(api.callMethod(Methods.login, this, username.getText().toString(), password.getText().toString()))
+			API api = new API(this);
+			if(!api.callMethod(Methods.login, this, username.getText().toString(), password.getText().toString()))
 			{
-				Toast msg = Toast.makeText(getApplicationContext(), "Error: You must enter both a username and password to login", Toast.LENGTH_SHORT);
+				Toast msg = Toast.makeText(this, "Error: You must enter both a username and password to login", Toast.LENGTH_SHORT);
+				msg.show();
 			}
 				
 			/* need to implement checking of login credentials
@@ -190,8 +191,11 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 				msg.show();
 			}
 		}
-		Toast msg = Toast.makeText(getApplicationContext(), "Invalid method callback", Toast.LENGTH_LONG);
-		msg.show();
+		else
+		{
+			Toast msg = Toast.makeText(getApplicationContext(), "Invalid method callback", Toast.LENGTH_LONG);
+			msg.show();
+		}
 	}
 	
 }

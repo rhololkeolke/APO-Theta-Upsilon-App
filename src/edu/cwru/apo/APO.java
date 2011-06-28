@@ -118,7 +118,7 @@ public class APO extends Activity implements AsyncRestRequestListener<API.Method
         
         //start Async Web Call here
         STARTTIME = Auth.getTimestamp();
-        API api = new API(getApplicationContext());
+        API api = new API(this);
         if(!api.callMethod(Methods.checkCredentials, this, (String[])null))
         {
         	Intent loginIntent = new Intent(APO.this, Login.class);

@@ -181,6 +181,9 @@ public class API extends Activity{
 		case login:
 			if(params.length != 2)
 				break;
+			if(params[0] == null || params[1] == null)
+				break;
+			
 			// set up a login request
 			ApiCall loginCall = new ApiCall(context, callback, method, "Logging In", "Please Wait");
 			RestClient loginClient = new RestClient(url, httpClient, RequestMethod.POST);
@@ -189,8 +192,8 @@ public class API extends Activity{
 			loginClient.AddParam("method", "login");
 			loginClient.AddParam("user", params[0]);
 			loginClient.AddParam("passHash", Auth.md5(params[1]));
-			loginClient.AddParam("AESkey", Auth.getAesKey(context));
-			loginClient.AddParam("installID", Installation.id(getApplicationContext()));
+			loginClient.AddParam("AESkey", Auth.getAesKey(context.getApplicationContext()));
+			loginClient.AddParam("installID", Installation.id(context.getApplicationContext()));
 			
 			//execute the call
 			loginCall.execute(loginClient);
@@ -209,7 +212,7 @@ public class API extends Activity{
 			
 			// if both exist add parameters to call and execute
 			checkCredentialsClient.AddParam("method", "checkCredentials");
-			checkCredentialsClient.AddParam("installID", Installation.id(context));
+			checkCredentialsClient.AddParam("installID", Installation.id(context.getApplicationContext()));
 			checkCredentialsClient.AddParam("timestamp", Long.toString(Auth.getTimestamp()));
 			checkCredentialsClient.AddParam("hmac", Auth.getHmac(checkCredentialsClient));
 			checkCredentialsClient.AddParam("otp", Auth.getOtp());
@@ -236,6 +239,7 @@ public class API extends Activity{
 		
 		private Context context;
 		private AsyncRestRequestListener<Methods,JSONObject> callback;
+		private Context progContext;
 		private String progTitle;
 		private String progMsg;
 		private Methods method;
@@ -245,7 +249,7 @@ public class API extends Activity{
 		// constructor used when no progress dialog is desired
 		public ApiCall(Context context, AsyncRestRequestListener<Methods,JSONObject> cb, Methods method)
 		{
-			this.context = context;
+			this.context = context.getApplicationContext();
 			this.callback = cb;
 			this.method = method;
 		}
@@ -253,9 +257,10 @@ public class API extends Activity{
 		// constructor used when progress dialog is desired
 		public ApiCall(Context context, AsyncRestRequestListener<Methods,JSONObject> cb, Methods method, String title, String message)
 		{
-			this.context = context;
+			this.context = context.getApplicationContext();
 			this.callback = cb;
 			this.method = method;
+			this.progContext = context;
 			this.progTitle = title;
 			this.progMsg = message;
 		}
@@ -266,7 +271,7 @@ public class API extends Activity{
 			// if message and title were specified start progress dialog
 			if((progTitle != null) && (progMsg != null))
 			{
-				progDialog = ProgressDialog.show(context, progTitle, progMsg);
+				progDialog = ProgressDialog.show(progContext, progTitle, progMsg, false);
 			}
 		}
 
