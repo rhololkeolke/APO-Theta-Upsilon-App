@@ -77,65 +77,6 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 				msg.show();
 			}
 				
-			/* need to implement checking of login credentials
-			 currently saves whatever values are input into username and password
-			 If there are input values saved when the app starts then it will bypass the login screen
-			 
-			JSONObject jObject = API.login(getApplicationContext(),username.getText().toString(),password.getText().toString());
-			if(jObject != null)
-			{
-				try {
-					String requestStatus = jObject.getString("requestStatus");
-					if(requestStatus.compareTo("valid login") == 0)
-					{
-						// sets the secret key
-						APO.secretKey = APO.appKey;// + API.md5(password.getText().toString());
-						APO.user = username.getText().toString();
-						
-						// stores the username and password
-						SharedPreferences preferences = getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE);
-						SharedPreferences.Editor prefEditor = preferences.edit();
-						prefEditor.putString("username", username.getText().toString());
-						prefEditor.putString("passHash", Auth.md5(password.getText().toString()));
-						prefEditor.commit();
-							
-						// starts home screen activity
-						Intent homeIntent = new Intent(Login.this, Home.class);
-						Login.this.startActivity(homeIntent);
-						finish();
-					}
-					else if(requestStatus.compareTo("invalid username") == 0)
-					{
-						String msg = "Invalid username.  Please check your username and try again";
-						Toast errorDialog = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
-						errorDialog.show();
-					}
-					else if(requestStatus.compareTo("invalid login") == 0)
-					{
-						String msg = "Invalid Login.  Please check your password and try again";
-						Toast errorDialog = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
-						errorDialog.show();
-					}
-					else if(requestStatus.compareTo("no user") == 0)
-					{
-						String msg = "No such user.  Please check your username and password again";
-						Toast errorDialog = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
-						errorDialog.show();
-					}
-					else
-					{
-						String msg = "Invalid response.  If the problem persists contact webmaster";
-						Toast errorDialog = Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG);
-						errorDialog.show();
-					}
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			
-				
-			}*/
-			break;
 		case R.id.forgot_password:
 			//start forgot password activity
 			Intent forgotPasswordIntent = new Intent(Login.this, ForgotPassword.class);

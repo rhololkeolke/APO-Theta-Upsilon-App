@@ -12,159 +12,11 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 public class API extends Activity{
-	/*private static HttpClient httpClient = null;
-	
-	public static JSONObject login(Context context, String user, String pass) // used for initial logins
-	{
-		//add code for Login here
-		if(httpClient == null)
-			httpClient = new TrustAPOHttpClient(context);
-		
-		Map<String, String> kvPairs = new HashMap<String, String>();
-		kvPairs.put("method","login");
-		kvPairs.put("user",user);
-		kvPairs.put("pass", Auth.md5(pass));
-		kvPairs.put("submitLogin", "1");
-		try{
-			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
-			HttpEntity httpEntity = httpResponse.getEntity();
-			String result = EntityUtils.toString(httpEntity);
-			JSONObject jObject = new JSONObject(result);
-			return jObject;
-		} catch(ClientProtocolException e) {
-			//Log.e("ClientProtocolException", ((Object) e).gotMessage());
-			e.printStackTrace();
-		} catch(IOException e) {
-			//Log.e("IOException", ((Object) e).gotMessage());
-			e.printStackTrace();
-		} catch(JSONException e) {
-			//Log.e("JSONException", ((Object) e).gotMessage());
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	public static JSONObject login(Context context, SharedPreferences preferences) // used when restoring 
-	{
-		if(httpClient == null)
-			httpClient = new TrustAPOHttpClient(context);
-        
-        String username = preferences.getString("username", null);
-        String passHash = preferences.getString("passHash", null);
-        if(username == null || passHash == null)
-        {
-        	JSONObject jObject = new JSONObject();
-        	try {
-				jObject.put("requestStatus", "missing username or passHash");
-				return jObject;
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-        }
-		Map<String, String> kvPairs = new HashMap<String, String>();
-		kvPairs.put("method", "login");
-		kvPairs.put("user", username);
-		kvPairs.put("pass", passHash);
-		kvPairs.put("submitLogin", "1");
-		try{
-			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
-			HttpEntity httpEntity = httpResponse.getEntity();
-			String result = EntityUtils.toString(httpEntity);
-			JSONObject jObject = new JSONObject(result);
-			return jObject;
-		} catch(ClientProtocolException e) {
-			//Log.e("ClientProtocolException", ((Object) e).gotMessage());
-			e.printStackTrace();
-		} catch(IOException e) {
-			//Log.e("IOException", ((Object) e).gotMessage());
-			e.printStackTrace();
-		} catch(JSONException e) {
-			//Log.e("JSONException", ((Object) e).gotMessage());
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	public static JSONObject getContract(Context context)
-	{
-		if(httpClient == null)
-			httpClient = new TrustAPOHttpClient(context);
-		Map<String, String> kvPairs = new HashMap<String, String>();
-		kvPairs.put("method", "getContract");
-		//kvPairs.put("user", APO.user);
-		Calendar cal = Calendar.getInstance();
-		kvPairs.put("timestamp", String.valueOf(cal.getTimeInMillis()));
-		//kvPairs.put("HMAC", Auth.HMAC(kvPairs, APO.secretKey));
-		try{
-			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
-			HttpEntity httpEntity = httpResponse.getEntity();
-			String result = EntityUtils.toString(httpEntity);
-			JSONObject jObject = new JSONObject(result);
-			return jObject;
-		} catch(ClientProtocolException e){
-			e.printStackTrace();
-		} catch(IOException e) {
-			e.printStackTrace();
-		} catch(JSONException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	public static JSONObject HMACTest(Context context)
-	{
-		if(httpClient == null)
-			httpClient = new TrustAPOHttpClient(context);
-		Map<String, String> kvPairs = new HashMap<String, String>();
-		kvPairs.put("method", "HMACTest");
-		//kvPairs.put("user", APO.user);
-		Calendar cal = Calendar.getInstance();
-		kvPairs.put("timestamp", String.valueOf(cal.getTimeInMillis()));
-		//kvPairs.put("HMAC", Auth.HMAC(kvPairs, APO.secretKey));
-		try{
-			HttpResponse httpResponse = doPost(httpClient, "https://apo.case.edu/api/api.php", kvPairs);
-			HttpEntity httpEntity = httpResponse.getEntity();
-			String result = EntityUtils.toString(httpEntity);
-			JSONObject jObject = new JSONObject(result);
-			return jObject;
-		} catch(ClientProtocolException e){
-			e.printStackTrace();
-		} catch(IOException e) {
-			e.printStackTrace();
-		} catch(JSONException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	public static HttpResponse doPost(HttpClient httpClient, String url, Map<String, String> kvPairs) throws ClientProtocolException, IOException {
-		HttpPost httpPost = new HttpPost(url);
-		
-		if(kvPairs != null && kvPairs.isEmpty() == false) {
-			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(kvPairs.size());
-			String k, v;
-			Iterator<String> itKeys = kvPairs.keySet().iterator();
-			
-			while(itKeys.hasNext()) {
-				k = itKeys.next();
-				v = kvPairs.get(k);
-				nameValuePairs.add(new BasicNameValuePair(k,v));
-			}
-
-			httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-
-		}
-
-		return httpClient.execute(httpPost);
-	}*/
-	
-	private static HttpClient httpClient = null; // this is static so that the session isn't broken
 	private static String url = "https://apo.case.edu/api/api.php";
 	
 	private Context context;
 	
-	public enum Methods {login, checkCredentials, getContract, phone, serviceReport};
+	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport};
 	
 	public API(Context context)
 	{
@@ -191,7 +43,7 @@ public class API extends Activity{
 			Auth.generateAesKey(512);
 			loginClient.AddParam("method", "login");
 			loginClient.AddParam("user", params[0]);
-			loginClient.AddParam("passHash", Auth.md5(params[1]));
+			loginClient.AddParam("pass", Auth.md5(params[1]));
 			loginClient.AddParam("AESkey", Auth.getAesKey(context.getApplicationContext()));
 			loginClient.AddParam("installID", Installation.id(context.getApplicationContext()));
 			
@@ -220,6 +72,12 @@ public class API extends Activity{
 			//execute the call
 			checkCredentialsCall.execute(checkCredentialsClient);
 			result = true;
+			break;
+		case logout:
+			// set up a logout request
+			break;
+		case resetPassword:
+			// set up a resetPassword request
 			break;
 		case getContract:
 			// set up a getContract request
