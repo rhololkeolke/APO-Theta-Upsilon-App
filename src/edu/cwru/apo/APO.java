@@ -38,7 +38,12 @@ public class APO extends Activity implements AsyncRestRequestListener<API.Method
 		Auth.loadKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
         
         //start Async Web Call here
-        STARTTIME = Auth.getTimestamp();
+		if(!Auth.loadRsaKey(getResources().openRawResource(R.raw.public_key)))
+		{
+			Toast msg = Toast.makeText(getApplicationContext(), "Error: Couldn't load RSA Key", Toast.LENGTH_LONG);
+			msg.show();
+		}
+			
         API api = new API(this);
         if(!api.callMethod(Methods.checkCredentials, this, (String[])null))
         {

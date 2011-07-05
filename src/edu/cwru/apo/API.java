@@ -12,11 +12,13 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 public class API extends Activity{
+	
+	private static HttpClient httpClient = null;
 	private static String url = "https://apo.case.edu/api/api.php";
 	
 	private Context context;
 	
-	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport};
+	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport, checkAES, decryptRSA};
 	
 	public API(Context context)
 	{
@@ -87,6 +89,20 @@ public class API extends Activity{
 			break;
 		case serviceReport:
 			// set up a serviceReport request
+			break;
+		case checkAES:
+			//this will be removed once the crypto is working
+			ApiCall checkAesCall = new ApiCall(context, callback, method);
+			RestClient checkAesClient = new RestClient(url, httpClient, RequestMethod.POST);
+			
+			checkAesClient.AddParam("method", "checkAES");
+			checkAesClient.AddParam("key", Auth.getAesKeyInsecure());
+			checkAesClient.AddParam("text", "test");
+			checkAesCall.execute(checkAesClient);
+			result = true;
+			break;
+		case decryptRSA:
+			//this will be removed once the crypto is working
 			break;
 		}
 		return result;

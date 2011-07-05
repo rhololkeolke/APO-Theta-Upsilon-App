@@ -27,6 +27,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -76,6 +77,8 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 				Toast msg = Toast.makeText(this, "Error: You must enter both a username and password to login", Toast.LENGTH_SHORT);
 				msg.show();
 			}
+			//api.callMethod(Methods.checkAES,this, (String[])null);
+			break;
 				
 		case R.id.forgot_password:
 			//start forgot password activity
@@ -132,11 +135,26 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 				msg.show();
 			}
 		}
+		/*else if(method == Methods.checkAES)
+		{
+			if(result != null)
+			{
+				try {
+					String encrypted = result.getString("encrypted");
+					String decrypted = Auth.AesDecryptPub(encrypted.getBytes());
+					Toast msg = Toast.makeText(getApplicationContext(), decrypted, Toast.LENGTH_LONG);
+					msg.show();
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
+		}*/
 		else
 		{
 			Toast msg = Toast.makeText(getApplicationContext(), "Invalid method callback", Toast.LENGTH_LONG);
 			msg.show();
 		}
 	}
-	
-}
+}	

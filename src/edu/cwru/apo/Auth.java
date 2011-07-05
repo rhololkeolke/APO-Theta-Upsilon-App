@@ -2,7 +2,7 @@ package edu.cwru.apo;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
@@ -10,9 +10,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.interfaces.RSAPublicKey;
+import java.security.interfaces.RSAKey;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPublicKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
@@ -24,6 +24,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.http.NameValuePair;
@@ -32,11 +34,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
 
-public class Auth {
+public class Auth{
 	
 	private static byte[] AesKey = null;
 	private static byte[] lastOtp = null;
 	private static byte[] HmacKey = null;
+	private static PublicKey RsaPubKey = null;
+	
+	private static byte[] iv = null;
 	
 	//returns true is an HMAC key is set
 	// false otherwise
@@ -100,10 +105,32 @@ public class Auth {
         
         if((Aes != null) && (Hmac != null) && (Otp != null))
         {
-        	AesKey = Base64.decode(AesKey, Base64.DEFAULT);
+        	AesKey = Base64.decode(Aes, Base64.DEFAULT);
         	HmacKey = Base64.decode(Hmac, Base64.DEFAULT);
         	lastOtp = Base64.decode(Otp, Base64.DEFAULT);
         }
+	}
+	
+	public static boolean loadRsaKey(InputStream is)
+	{
+		try {
+			byte[] keyBytes = new byte[is.available()];
+			is.read(keyBytes);
+			X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+			KeyFactory kf = KeyFactory.getInstance("RSA");
+			RsaPubKey = kf.generatePublic(spec);
+			return true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	// returns a new OTP
@@ -114,7 +141,7 @@ public class Auth {
 			return null;
 		
 		// encrypt the last OTP
-		byte[] encrypted = AesEncrypt(lastOtp);
+		byte[] encrypted = AesEncrypt(lastOtp); // CHANGE THE IV
 		
 		// encrypt will return the input if an error occurs
 		// Have to make sure the data was actually encrypted
@@ -157,23 +184,16 @@ public class Auth {
 	{
 		// load the RSA key from packaged file
 		//RsaPublicKey rsaKey = new RsaPublicKey(context, "rsa_public_key.res");
-	    KeyFactory keyFactory;
+	    if(RsaPubKey == null)
+	    	return "Error: RsaPubKey not loaded";
 		try {
-	        RSAPublicKeySpec pubKeySpec = new RSAPublicKeySpec(
-	                new BigInteger("00c897f9e401819e223ffbecc6f715a8d84dce9022762e0e2d54fa434787fcaf230d28bd0c3b6b39b5211f74ffc4871c421362ccfc07ae98b88fa9728f1e26b8210ebbf4981e45867fe810938294d0095d341b646b86dcbd4c246676c203cb1584d01eef0635299714d94fa12933ecd35e6c412573156d9e6e549b7804eb6e165660507d8748bcc8c60da10099bacb94d3f7b50b1883ee108489e0dd97ed7d28e564edd4ee5d6b4225f5c23cdaaf495c3fa08c3b82e1674946e4fa1e79b2493204d6953c261105ba5d0f8dcf3fcd39a51fbc18a5f58ffff169b1bed7ceeded2ae0e8e8e2238e8b77b324d1a482593b1a642e688c860e90d5a3de8515caf384133b", 16),
-	                new BigInteger("11", 16));
-			keyFactory = KeyFactory.getInstance("RSA", "BC");
-			//RSAPublicKeySpec rsaKeySpec = new RSAPublicKeySpec(rsaKey.MODULUS, new BigInteger("11", 16));
-			RSAPublicKey pubKey = (RSAPublicKey)keyFactory.generatePublic(pubKeySpec);
-			
-			
 			//Set up the cipher to RSA encryption
-		    Cipher cipher = Cipher.getInstance("RSA/None/NoPadding", "BC");
-			cipher.init(Cipher.ENCRYPT_MODE, pubKey);
+		    Cipher cipher = Cipher.getInstance("RSA/CFB/PKCS1Padding", "BC");
+			cipher.init(Cipher.ENCRYPT_MODE, RsaPubKey);
 			
 			// make sure the Aes Key is less than a block size
 			// otherwise major errors will occur
-			if(AesKey.length * 8 > pubKey.getModulus().bitLength())
+			if(AesKey.length * 8 > ((RSAKey) RsaPubKey).getModulus().bitLength())
 				return "Error: AesKey bigger than block size of RSA Key";
 			
 			byte[] encryptedKey = cipher.doFinal(AesKey);
@@ -199,12 +219,16 @@ public class Auth {
 		} catch (BadPaddingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 
 		return null;
+	}
+	
+	public static String getAesKeyInsecure()
+	{
+		if(AesKey == null)
+			generateAesKey(512);
+		return Base64.encodeToString(AesKey, Base64.DEFAULT);
 	}
 
 	// returns the number of milliseconds since 1970
@@ -216,11 +240,12 @@ public class Auth {
 	
 	private static byte[] AesEncrypt(byte[] input)
 	{
-		SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
-		Cipher cipher;
 		try {
-			cipher = Cipher.getInstance("AES");
+			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
+
+			Cipher cipher = Cipher.getInstance("AES/CFB/PKCS5Padding");
 			cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+			iv = cipher.getIV();
 			return cipher.doFinal(input);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -244,11 +269,11 @@ public class Auth {
 	
 	private static byte[] AesDecrypt(byte[] input)
 	{
-		SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
-		Cipher cipher;
 		try {
-			cipher = Cipher.getInstance("AES");
-			cipher.init(Cipher.DECRYPT_MODE, keySpec);
+			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
+			
+			Cipher cipher = Cipher.getInstance("AES/CFB/PKCS5Padding");
+			cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv));
 			return cipher.doFinal(input);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -265,8 +290,11 @@ public class Auth {
 		} catch (BadPaddingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (InvalidAlgorithmParameterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return input;
+		return "".getBytes();
 	}
 	
     /*private static class RsaPublicKey {
@@ -302,14 +330,14 @@ public class Auth {
 			digest = MessageDigest.getInstance("MD5");
 			digest.reset();
 			digest.update(in.getBytes());
-			return bytesToString(digest.digest());
+			return new String(digest.digest());
 		} catch(NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 	
-	private static String bytesToString(byte[] input)
+	public static String bytesToString(byte[] input)
 	{
 		int len = input.length;
 		StringBuilder sb = new StringBuilder(len << 1);
