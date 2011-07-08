@@ -1,11 +1,5 @@
 package edu.cwru.apo;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;

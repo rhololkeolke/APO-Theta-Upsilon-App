@@ -2,6 +2,9 @@ package edu.cwru.apo;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -24,7 +27,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -154,10 +156,11 @@ public class Auth{
 		return Base64.encodeToString(lastOtp, Base64.DEFAULT);
 	}
 	
-	public static boolean setOtpAndHmac(String OTP)
+	public static boolean setOtpAndHmac(String OTP, String Iv)
 	{
-		lastOtp = Base64.decode(OTP, Base64.DEFAULT);
-		HmacKey = AesDecrypt(lastOtp);
+		lastOtp = Base64.decode(URLDecoder.decode(OTP), Base64.DEFAULT);
+		byte[] AESiv= Base64.decode(URLDecoder.decode(Iv), Base64.DEFAULT);
+		HmacKey = AesDecrypt(lastOtp,AESiv);
 		if(HmacKey != lastOtp)
 			return true;
 		return false;
@@ -188,7 +191,7 @@ public class Auth{
 	    	return "Error: RsaPubKey not loaded";
 		try {
 			//Set up the cipher to RSA encryption
-		    Cipher cipher = Cipher.getInstance("RSA/CFB/PKCS1Padding", "BC");
+		    Cipher cipher = Cipher.getInstance("RSA/NONE/PKCS1Padding", "BC");
 			cipher.init(Cipher.ENCRYPT_MODE, RsaPubKey);
 			
 			// make sure the Aes Key is less than a block size
@@ -197,9 +200,13 @@ public class Auth{
 				return "Error: AesKey bigger than block size of RSA Key";
 			
 			byte[] encryptedKey = cipher.doFinal(AesKey);
+		    
+			String key = new String(encryptedKey,"UTF8");  //only used for test to see if the php will decrypt to the same key
 			
+			String base64 = Base64.encodeToString(encryptedKey, Base64.DEFAULT);
+			base64 = URLEncoder.encode(base64);
 			// return result Base64 encoded
-			return Base64.encodeToString(encryptedKey, Base64.DEFAULT);
+			return base64;
 			
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -219,6 +226,9 @@ public class Auth{
 		} catch (BadPaddingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 		return null;
@@ -227,7 +237,7 @@ public class Auth{
 	public static String getAesKeyInsecure()
 	{
 		if(AesKey == null)
-			generateAesKey(512);
+			generateAesKey(256);
 		return Base64.encodeToString(AesKey, Base64.DEFAULT);
 	}
 
@@ -267,13 +277,13 @@ public class Auth{
 		
 	}
 	
-	private static byte[] AesDecrypt(byte[] input)
+	private static byte[] AesDecrypt(byte[] input, byte[] Iv)
 	{
 		try {
 			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
 			
-			Cipher cipher = Cipher.getInstance("AES/CFB/PKCS5Padding");
-			cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv));
+			Cipher cipher = Cipher.getInstance("AES/CFB/NoPadding");
+			cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(Iv));
 			return cipher.doFinal(input);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -330,7 +340,16 @@ public class Auth{
 			digest = MessageDigest.getInstance("MD5");
 			digest.reset();
 			digest.update(in.getBytes());
-			return new String(digest.digest());
+			
+			byte messageDigest[] = digest.digest();
+	        
+	        // Create Hex String
+	        StringBuffer hexString = new StringBuffer();
+	        for (int i=0; i<messageDigest.length; i++)
+	            hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
+	        return hexString.toString();
+
+			//return new String(digest.digest());
 		} catch(NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}

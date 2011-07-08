@@ -1,23 +1,5 @@
 package edu.cwru.apo;
 
-import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -25,10 +7,7 @@ import edu.cwru.apo.API.Methods;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Base64;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -99,7 +78,7 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 					String requestStatus = result.getString("requestStatus");
 					if(requestStatus.compareTo("valid login") == 0)
 					{
-						Auth.setOtpAndHmac(result.getString("key"));
+						Auth.setOtpAndHmac(result.getString("key"), result.getString("iv"));
 						Intent homeIntent = new Intent(Login.this, Home.class);
 						Login.this.startActivity(homeIntent);
 						finish();

@@ -1,7 +1,6 @@
 package edu.cwru.apo;
 
 import org.apache.http.client.HttpClient;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.cwru.apo.RestClient.RequestMethod;
@@ -14,7 +13,7 @@ import android.os.AsyncTask;
 public class API extends Activity{
 	
 	private static HttpClient httpClient = null;
-	private static String url = "https://apo.case.edu/api/api.php";
+	private static String url = "https://apo.case.edu:8090/api/api.php";
 	
 	private Context context;
 	
@@ -41,12 +40,13 @@ public class API extends Activity{
 			// set up a login request
 			ApiCall loginCall = new ApiCall(context, callback, method, "Logging In", "Please Wait");
 			RestClient loginClient = new RestClient(url, httpClient, RequestMethod.POST);
-			
-			Auth.generateAesKey(512);
+			String passHass =  Auth.md5(params[1]);		//only used to see that the md5 is not working correctly
+			Auth.generateAesKey(256);
+			String aes = Auth.getAesKey(context.getApplicationContext());
 			loginClient.AddParam("method", "login");
 			loginClient.AddParam("user", params[0]);
-			loginClient.AddParam("pass", Auth.md5(params[1]));
-			loginClient.AddParam("AESkey", Auth.getAesKey(context.getApplicationContext()));
+			loginClient.AddParam("pass", Auth.md5(params[1]));		//temp solution for password it to not use the md5 method and just copy in the password hash string literal
+			loginClient.AddParam("AESkey", aes );
 			loginClient.AddParam("installID", Installation.id(context.getApplicationContext()));
 			
 			//execute the call
