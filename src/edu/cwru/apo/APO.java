@@ -79,11 +79,28 @@ public class APO extends Activity implements AsyncRestRequestListener<API.Method
 					}
 					else if(result.getString("requestStatus").compareTo("No response") == 0)
 					{
+						Auth.rollbackOtp(); // rollback the OTP so the user won't have to login again when the internet is restored
 						extras.putString("msg", "Could not contact web server. Please check your connection");
 					}
-					else
+					else if(result.getString("requestStatus").compareTo("timestamp invalid") == 0)
 					{
-						extras.putString("msg", "Invalid credentials");
+						Auth.clearKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE)); // one or all are invalid so delete them all
+						extras.putString("msg", "Timestamp invalid");
+					}
+					else if(result.getString("requestStatus").compareTo("HMAC invalid") == 0)
+					{
+						Auth.clearKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
+						extras.putString("msg", "HMAC Invalid");
+					}
+					else if(result.getString("requestStatus").compareTo("OTP invalid") == 0)
+					{
+						Auth.clearKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
+						extras.putString("msg", "OTP invalid");
+					}
+					else 
+					{
+						Auth.clearKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
+						extras.putString("msg", "unknown requestStatus");
 					}
 					
 				} catch (JSONException e) {

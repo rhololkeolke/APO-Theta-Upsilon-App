@@ -78,7 +78,14 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 					String requestStatus = result.getString("requestStatus");
 					if(requestStatus.compareTo("valid login") == 0)
 					{
-						Auth.setOtpAndHmac(result.getString("key"), result.getString("iv"));
+						String key = result.getString("key");
+						String iv = result.getString("iv");
+						if(!Auth.setOtpAndHmac(result.getString("key"), result.getString("iv")))
+						{
+							Toast msg = Toast.makeText(getApplicationContext(), "Error setting OTP and HMAC", Toast.LENGTH_LONG);
+							msg.show();
+						}
+						Auth.saveKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
 						Intent homeIntent = new Intent(Login.this, Home.class);
 						Login.this.startActivity(homeIntent);
 						finish();
@@ -114,22 +121,6 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 				msg.show();
 			}
 		}
-		/*else if(method == Methods.checkAES)
-		{
-			if(result != null)
-			{
-				try {
-					String encrypted = result.getString("encrypted");
-					String decrypted = Auth.AesDecryptPub(encrypted.getBytes());
-					Toast msg = Toast.makeText(getApplicationContext(), decrypted, Toast.LENGTH_LONG);
-					msg.show();
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-
-		}*/
 		else
 		{
 			Toast msg = Toast.makeText(getApplicationContext(), "Invalid method callback", Toast.LENGTH_LONG);

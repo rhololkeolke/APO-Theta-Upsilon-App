@@ -17,7 +17,7 @@ public class API extends Activity{
 	
 	private Context context;
 	
-	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport, checkAES, decryptRSA};
+	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport};
 	
 	public API(Context context)
 	{
@@ -28,6 +28,7 @@ public class API extends Activity{
 	
 	public boolean callMethod(Methods method, AsyncRestRequestListener<Methods, JSONObject> callback, String...params)
 	{
+		String hmac;
 		boolean result = false;
 		switch(method)
 		{
@@ -40,13 +41,13 @@ public class API extends Activity{
 			// set up a login request
 			ApiCall loginCall = new ApiCall(context, callback, method, "Logging In", "Please Wait");
 			RestClient loginClient = new RestClient(url, httpClient, RequestMethod.POST);
-			String passHass =  Auth.md5(params[1]);		//only used to see that the md5 is not working correctly
+			String passHash =  Auth.md5(params[1]);		//only used to see that the md5 is not working correctly
 			Auth.generateAesKey(256);
 			String aes = Auth.getAesKey(context.getApplicationContext());
 			loginClient.AddParam("method", "login");
 			loginClient.AddParam("user", params[0]);
-			loginClient.AddParam("pass", Auth.md5(params[1]));		//temp solution for password it to not use the md5 method and just copy in the password hash string literal
-			loginClient.AddParam("AESkey", aes );
+			loginClient.AddParam("pass", passHash);		//temp solution for password it to not use the md5 method and just copy in the password hash string literal
+			loginClient.AddParam("AESkey", aes);
 			loginClient.AddParam("installID", Installation.id(context.getApplicationContext()));
 			
 			//execute the call
@@ -68,8 +69,9 @@ public class API extends Activity{
 			checkCredentialsClient.AddParam("method", "checkCredentials");
 			checkCredentialsClient.AddParam("installID", Installation.id(context.getApplicationContext()));
 			checkCredentialsClient.AddParam("timestamp", Long.toString(Auth.getTimestamp()));
-			checkCredentialsClient.AddParam("hmac", Auth.getHmac(checkCredentialsClient));
-			checkCredentialsClient.AddParam("otp", Auth.getOtp());
+			hmac = Auth.getHmac(checkCredentialsClient);
+			checkCredentialsClient.AddParam("hmac", hmac);
+			checkCredentialsClient.AddParam("otp", Auth.getOtp(hmac));
 			
 			//execute the call
 			checkCredentialsCall.execute(checkCredentialsClient);
@@ -77,32 +79,58 @@ public class API extends Activity{
 			break;
 		case logout:
 			// set up a logout request
+			ApiCall logoutCall = new ApiCall(context, callback, method);
+			RestClient logoutClient = new RestClient(url, httpClient, RequestMethod.POST);
+			
+			// clear all the keys in memory and preference file
+			Auth.clearKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
+			
+			// add the parameters to the call
+			logoutClient.AddParam("method", "logout");
+			logoutClient.AddParam("installID", Installation.id(context.getApplicationContext()));
+			
+			// execute the call
+			logoutCall.execute(logoutClient);
+			
+			result = true;
 			break;
 		case resetPassword:
 			// set up a resetPassword request
+			ApiCall resetPasswordCall = new ApiCall(context, callback, method);
+			RestClient resetPasswordClient = new RestClient(url, httpClient, RequestMethod.POST);
+			
+			//add parameters to the call
+			resetPasswordClient.AddParam("method", "resetPassword");
+			resetPasswordClient.AddParam("caseID", params[0]);
+			
+			//execute the call
+			resetPasswordCall.execute(resetPasswordClient);
+			
+			result = true;
 			break;
 		case getContract:
 			// set up a getContract request
+			ApiCall getContractCall = new ApiCall(context, callback, method);
+			RestClient getContractClient = new RestClient(url, httpClient, RequestMethod.POST);
+			
+			// add parameters to the call
+			getContractClient.AddParam("method", "getContract");
+			getContractClient.AddParam("installID", Installation.id(context.getApplicationContext()));
+			getContractClient.AddParam("timestamp", Long.toString(Auth.getTimestamp()));
+			hmac = Auth.getHmac(getContractClient);
+			getContractClient.AddParam("hmac", hmac);
+			getContractClient.AddParam("otp", Auth.getOtp(hmac));
+			
+			//execute request
+			getContractCall.execute(getContractClient);
+			
+			result = true;
 			break;
 		case phone:
 			// set up a phone request
 			break;
 		case serviceReport:
 			// set up a serviceReport request
-			break;
-		case checkAES:
-			//this will be removed once the crypto is working
-			ApiCall checkAesCall = new ApiCall(context, callback, method);
-			RestClient checkAesClient = new RestClient(url, httpClient, RequestMethod.POST);
-			
-			checkAesClient.AddParam("method", "checkAES");
-			checkAesClient.AddParam("key", Auth.getAesKeyInsecure());
-			checkAesClient.AddParam("text", "test");
-			checkAesCall.execute(checkAesClient);
-			result = true;
-			break;
-		case decryptRSA:
-			//this will be removed once the crypto is working
 			break;
 		}
 		return result;

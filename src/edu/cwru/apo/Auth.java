@@ -2,7 +2,6 @@ package edu.cwru.apo;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.InvalidAlgorithmParameterException;
@@ -34,6 +33,7 @@ import org.apache.http.NameValuePair;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.util.Base64;
 
 public class Auth{
@@ -43,13 +43,13 @@ public class Auth{
 	private static byte[] HmacKey = null;
 	private static PublicKey RsaPubKey = null;
 	
-	private static byte[] iv = null;
+	private static String lastHmac = null;
 	
 	//returns true is an HMAC key is set
 	// false otherwise
 	public static boolean HmacKeyExists()
 	{
-		if(HmacKey != null)
+		if(Auth.HmacKey != null)
 			return true;
 		return false;
 		
@@ -59,7 +59,7 @@ public class Auth{
 	// false otherwise
 	public static boolean AesKeyExists()
 	{
-		if(AesKey != null)
+		if(Auth.AesKey != null)
 			return true;
 		return false;
 	}
@@ -86,7 +86,7 @@ public class Auth{
 			mac = Mac.getInstance("HmacMD5");
 		    mac.init(sk);
 
-		    return Base64.encodeToString(mac.doFinal(data.getBytes()), Base64.DEFAULT);
+		    return URLEncoder.encode(Base64.encodeToString(mac.doFinal(data.getBytes()), Base64.DEFAULT));
 		    
 		} catch (InvalidKeyException e) {
 			// TODO Auto-generated catch block
@@ -102,14 +102,16 @@ public class Auth{
 	public static void loadKeys(SharedPreferences prefs)
 	{
         String Aes = prefs.getString("AesKey", null);
-        String Hmac = prefs.getString("HmacKey", null);
+        String secretKey = prefs.getString("HmacKey", null);
         String Otp = prefs.getString("lastOtp", null);
+        String Hmac = prefs.getString("lastHmac", null);
         
-        if((Aes != null) && (Hmac != null) && (Otp != null))
+        if((Aes != null) && (secretKey != null) && (Otp != null) && (Hmac != null))
         {
         	AesKey = Base64.decode(Aes, Base64.DEFAULT);
-        	HmacKey = Base64.decode(Hmac, Base64.DEFAULT);
+        	HmacKey = Base64.decode(secretKey, Base64.DEFAULT);
         	lastOtp = Base64.decode(Otp, Base64.DEFAULT);
+        	lastHmac = Hmac;
         }
 	}
 	
@@ -134,16 +136,51 @@ public class Auth{
 		}
 		return false;
 	}
+	
+	public static boolean saveKeys(SharedPreferences pref)
+	{
+		Editor prefsEditor = pref.edit();
+		if(AesKey != null)
+			prefsEditor.putString("AesKey", Base64.encodeToString(AesKey, Base64.DEFAULT));
+		else
+			return false;
+		if(HmacKey != null)
+			prefsEditor.putString("HmacKey", Base64.encodeToString(HmacKey, Base64.DEFAULT));
+		else
+			return false;
+		if(lastOtp != null)
+			prefsEditor.putString("lastOtp", Base64.encodeToString(lastOtp, Base64.DEFAULT));
+		else
+			return false;
+		if(lastHmac != null)
+			prefsEditor.putString("lastHmac", lastHmac);
+		else
+			return false;
+		
+		return true;
+			
+	}
 
+	public  static void clearKeys(SharedPreferences pref)
+	{
+		Editor prefsEditor = pref.edit();
+		prefsEditor.clear(); // clear all the saved keys
+		
+		// clear all the keys in memory
+		AesKey = null;
+		lastOtp = null;
+		HmacKey = null;
+		lastHmac = null;
+	}
 	// returns a new OTP
-	public static String getOtp()
+	public static String getOtp(String Hmac)
 	{
 		// make sure there is a key to use
 		if(AesKey == null)
 			return null;
 		
 		// encrypt the last OTP
-		byte[] encrypted = AesEncrypt(lastOtp); // CHANGE THE IV
+		byte[] encrypted = AesEncrypt(lastOtp, URLDecoder.decode(Hmac)); // CHANGE THE IV
 		
 		// encrypt will return the input if an error occurs
 		// Have to make sure the data was actually encrypted
@@ -153,14 +190,35 @@ public class Auth{
 		// everything went okay
 		// update the OTP and return it in Base64 encoded form
 		lastOtp = encrypted;
-		return Base64.encodeToString(lastOtp, Base64.DEFAULT);
+		return URLEncoder.encode(Base64.encodeToString(lastOtp, Base64.DEFAULT));
+	}
+	
+	public static boolean rollbackOtp()
+	{
+		if(AesKey == null || lastHmac == null)
+			return false;
+		
+		// decrypt the last OTP
+		byte[] decrypted = AesDecrypt(lastOtp, lastHmac); 
+		
+		// make sure it decrypted correctly
+		if(decrypted == lastOtp)
+			return false;
+		
+		// everything went okay
+		// update the OTP
+		lastOtp = decrypted;
+		return true;
+		
 	}
 	
 	public static boolean setOtpAndHmac(String OTP, String Iv)
 	{
+
 		lastOtp = Base64.decode(URLDecoder.decode(OTP), Base64.DEFAULT);
-		byte[] AESiv= Base64.decode(URLDecoder.decode(Iv), Base64.DEFAULT);
-		HmacKey = AesDecrypt(lastOtp,AESiv);
+		byte[] AesIv = Base64.decode(URLDecoder.decode(Iv), Base64.DEFAULT);
+		HmacKey = AesDecrypt(lastOtp, AesIv);
+
 		if(HmacKey != lastOtp)
 			return true;
 		return false;
@@ -200,9 +258,7 @@ public class Auth{
 				return "Error: AesKey bigger than block size of RSA Key";
 			
 			byte[] encryptedKey = cipher.doFinal(AesKey);
-		    
-			String key = new String(encryptedKey,"UTF8");  //only used for test to see if the php will decrypt to the same key
-			
+		    			
 			String base64 = Base64.encodeToString(encryptedKey, Base64.DEFAULT);
 			base64 = URLEncoder.encode(base64);
 			// return result Base64 encoded
@@ -226,19 +282,9 @@ public class Auth{
 		} catch (BadPaddingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 
 		return null;
-	}
-	
-	public static String getAesKeyInsecure()
-	{
-		if(AesKey == null)
-			generateAesKey(256);
-		return Base64.encodeToString(AesKey, Base64.DEFAULT);
 	}
 
 	// returns the number of milliseconds since 1970
@@ -248,14 +294,13 @@ public class Auth{
 		return cal.getTimeInMillis();
 	}
 	
-	private static byte[] AesEncrypt(byte[] input)
+	private static byte[] AesEncrypt(byte[] input, String iv)
 	{
 		try {
 			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
 
 			Cipher cipher = Cipher.getInstance("AES/CFB/PKCS5Padding");
-			cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-			iv = cipher.getIV();
+			cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(iv.substring(0, 16).getBytes()));
 			return cipher.doFinal(input);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -272,18 +317,52 @@ public class Auth{
 		} catch (BadPaddingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (InvalidAlgorithmParameterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		return input;
 		
 	}
 	
-	private static byte[] AesDecrypt(byte[] input, byte[] Iv)
+	private static byte[] AesEncrypt(byte[] input, byte[] iv)
+	{
+		try {
+			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
+
+			Cipher cipher = Cipher.getInstance("AES/CFB/PKCS5Padding");
+			cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(iv));
+			return cipher.doFinal(input);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidAlgorithmParameterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return input;
+		
+	}
+	
+	private static byte[] AesDecrypt(byte[] input, String iv)
 	{
 		try {
 			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
 			
 			Cipher cipher = Cipher.getInstance("AES/CFB/NoPadding");
-			cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(Iv));
+			cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv.substring(0, 16).getBytes()));
 			return cipher.doFinal(input);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -307,31 +386,35 @@ public class Auth{
 		return "".getBytes();
 	}
 	
-    /*private static class RsaPublicKey {
-        public BigInteger EXPONENT;
-        public BigInteger MODULUS;
-        public RsaPublicKey(Context context, String filename) {
-            InputStream in;
-			try {
-				in = context.getAssets().open(filename);
-	            String contents = new String();
-	            try {
-	                int c;
-	                while ((c = in.read()) != -1) {
-	                    contents += (char) c;
-	                }
-	            } catch (IOException e) {
-	                System.err.println("Could not read RSA key resource.");
-	            }
-	            int linebreak = contents.indexOf("\n");
-	            EXPONENT = new BigInteger(contents.substring(0, linebreak).trim());
-	            MODULUS = new BigInteger(contents.substring(linebreak + 1).trim(), 16);
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-        }
-    }*/
+	private static byte[] AesDecrypt(byte[] input, byte[] iv)
+	{
+		try {
+			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
+			
+			Cipher cipher = Cipher.getInstance("AES/CFB/NoPadding");
+			cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv));
+			return cipher.doFinal(input);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidAlgorithmParameterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "".getBytes();
+	}
     
 	public static String md5(String in)
 	{
@@ -344,19 +427,19 @@ public class Auth{
 			byte messageDigest[] = digest.digest();
 	        
 	        // Create Hex String
-	        StringBuffer hexString = new StringBuffer();
+	        /* StringBuffer hexString = new StringBuffer();
 	        for (int i=0; i<messageDigest.length; i++)
 	            hexString.append(Integer.toHexString(0xFF & messageDigest[i]));
-	        return hexString.toString();
+	        return hexString.toString();*/
+			return bytesToHex(messageDigest);
 
-			//return new String(digest.digest());
 		} catch(NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 	
-	public static String bytesToString(byte[] input)
+	private static String bytesToHex(byte[] input)
 	{
 		int len = input.length;
 		StringBuilder sb = new StringBuilder(len << 1);
