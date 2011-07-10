@@ -36,16 +36,24 @@ public class Profile extends Activity implements AsyncRestRequestListener<Method
 			if(result != null)
 			{
 				try {
-					byte[] encrypted = Auth.hexToBytes(result.getString("encrypted"));
-					byte[] iv = "fedcba9876543210".getBytes();
-					String decrypted = Auth.bytesToHex(Auth.AesDecrypt(encrypted, iv));
-					text.setText(decrypted);
+					String encrypted = result.getString("encrypted");
+					String key = result.getString("key");
+					String iv = result.getString("iv");
+					String decrypted = Auth.AesDecrypt(encrypted, key, iv);
+					Toast msg = Toast.makeText(getApplicationContext(), decrypted, Toast.LENGTH_LONG);
+					msg.show();
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
+					Toast msg = Toast.makeText(getApplicationContext(), "Invalid JSON", Toast.LENGTH_LONG);
+					msg.show();
 					e.printStackTrace();
 				}
-				
 			}
+		}
+		else
+		{
+			Toast msg = Toast.makeText(getApplicationContext(), "Invalid method", Toast.LENGTH_LONG);
+			msg.show();
 		}
 	}
 }

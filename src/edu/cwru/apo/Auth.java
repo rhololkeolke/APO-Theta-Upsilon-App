@@ -299,7 +299,7 @@ public class Auth{
 		try {
 			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
 
-			Cipher cipher = Cipher.getInstance("AES/CFB/PKCS5Padding");
+			Cipher cipher = Cipher.getInstance("AES/CFB/ZeroBytePadding");
 			cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(iv.substring(0, 16).getBytes()));
 			return cipher.doFinal(input);
 		} catch (NoSuchAlgorithmException e) {
@@ -322,7 +322,6 @@ public class Auth{
 			e.printStackTrace();
 		}
 		return input;
-		
 	}
 	
 	private static byte[] AesEncrypt(byte[] input, byte[] iv)
@@ -330,7 +329,7 @@ public class Auth{
 		try {
 			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
 
-			Cipher cipher = Cipher.getInstance("AES/CFB/PKCS5Padding");
+			Cipher cipher = Cipher.getInstance("AES/CFB/ZeroBytePadding");
 			cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(iv));
 			return cipher.doFinal(input);
 		} catch (NoSuchAlgorithmException e) {
@@ -356,13 +355,13 @@ public class Auth{
 		
 	}
 	
-	private static byte[] AesDecrypt(byte[] input, String iv)
+	private static byte[] AesDecrypt(byte[] input, byte[] aesIv)
 	{
 		try {
 			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
 			
-			Cipher cipher = Cipher.getInstance("AES/CFB/NoPadding");
-			cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv.substring(0, 16).getBytes()));
+			Cipher cipher = Cipher.getInstance("AES/CFB/ZeroBytePadding");
+			cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(aesIv));
 			return cipher.doFinal(input);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -386,14 +385,22 @@ public class Auth{
 		return "".getBytes();
 	}
 	
-	public static byte[] AesDecrypt(byte[] input, byte[] iv)
+	private static byte[] AesDecrypt(byte[] input, String aesIv)
+	{
+		return AesDecrypt(input, aesIv.substring(0, 16).getBytes());
+	}
+	
+	public static String AesDecrypt(String input, String key, String iv)
 	{
 		try {
-			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
+			//SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
 			
-			Cipher cipher = Cipher.getInstance("AES/CFB/NoPadding");
-			cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv));
-			return cipher.doFinal(input);
+			Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+			SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "AES");
+			IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes());
+			cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+			byte[] outText = cipher.doFinal(hexToBytes(input));
+			return new String(outText).trim();
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -413,7 +420,7 @@ public class Auth{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return "".getBytes();
+		return "";
 	}
     
 	public static String md5(String in)
@@ -451,7 +458,28 @@ public class Auth{
 		return sb.toString();
 	}
 	
-	public static byte[] hexToBytes(String hex) 
+	public static byte[] hexToBytes(String str) {
+		if (str == null)
+		{
+			return null;
+		}
+		else if (str.length() < 2) 
+		{
+			return null;
+		}
+		else
+		{
+			int len = str.length() /2;
+			byte[] buffer = new byte[len];
+			for(int i=0; i<len; i++)
+			{
+				buffer[i] = (byte) Integer.parseInt(str.substring(i*2, i*2+2), 16);
+			}
+			return buffer;
+		}
+	}
+	
+	/*public static byte[] hexToBytes(String hex) 
 	{
 		String HEXINDEX = "0123456789abcdef";
 		int l = hex.length() / 2;
@@ -472,7 +500,7 @@ public class Auth{
 		}
 
 		return data;
-	}
+	}*/
 
 	private String padString(String source) 
 	{

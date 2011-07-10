@@ -17,7 +17,7 @@ public class API extends Activity{
 	
 	private Context context;
 	
-	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport, checkAES};
+	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport, checkAES, aesServerEncryption, aesServerDecryption};
 	
 	public API(Context context)
 	{
@@ -32,6 +32,15 @@ public class API extends Activity{
 		boolean result = false;
 		switch(method)
 		{
+		case aesServerEncryption:
+			ApiCall serverEncryptionCall = new ApiCall(context, callback, method, "Testing", "Please Wait");
+			RestClient serverEncryptionClient = new RestClient(url, httpClient, RequestMethod.POST);
+			serverEncryptionClient.AddParam("method", "aesServerEncryption");
+			serverEncryptionClient.AddParam("plain", "Hello World");
+			
+			serverEncryptionCall.execute(serverEncryptionClient);
+			result=true;
+			break;
 		case login:
 			if(params.length != 2)
 				break;
@@ -135,9 +144,12 @@ public class API extends Activity{
 		case checkAES:
 			ApiCall checkAESCall = new ApiCall(context, callback, method);
 			RestClient checkAESClient = new RestClient(url, httpClient, RequestMethod.POST);
+			Auth.generateAesKey(256);
+			String key = Auth.getAesKeyInsecure();
 			checkAESClient.AddParam("method", "checkAES");
-			checkAESClient.AddParam("text", "test");
-			checkAESClient.AddParam("key",Auth.getAesKeyInsecure());
+			checkAESClient.AddParam("plain", "Hello World");
+			checkAESClient.AddParam("key", "01234567890abcde");
+			checkAESClient.AddParam("iv", "fedcba9876543210");
 			//execute request
 			checkAESCall.execute(checkAESClient);
 			
