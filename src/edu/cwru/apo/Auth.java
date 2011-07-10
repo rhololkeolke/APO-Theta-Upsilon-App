@@ -386,7 +386,7 @@ public class Auth{
 		return "".getBytes();
 	}
 	
-	private static byte[] AesDecrypt(byte[] input, byte[] iv)
+	public static byte[] AesDecrypt(byte[] input, byte[] iv)
 	{
 		try {
 			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
@@ -439,7 +439,7 @@ public class Auth{
 		return null;
 	}
 	
-	private static String bytesToHex(byte[] input)
+	public static String bytesToHex(byte[] input)
 	{
 		int len = input.length;
 		StringBuilder sb = new StringBuilder(len << 1);
@@ -450,5 +450,48 @@ public class Auth{
 		}
 		return sb.toString();
 	}
+	
+	public static byte[] hexToBytes(String hex) 
+	{
+		String HEXINDEX = "0123456789abcdef";
+		int l = hex.length() / 2;
+		byte data[] = new byte[l];
+		int j = 0;
 
+		for (int i = 0; i < l; i++) 
+		{
+		    char c = hex.charAt(j++);
+		    int n, b;
+	
+		    n = HEXINDEX.indexOf(c);
+			b = (n & 0xf) << 4;
+			c = hex.charAt(j++);
+			n = HEXINDEX.indexOf(c);
+			b += (n & 0xf);
+			data[i] = (byte) b;
+		}
+
+		return data;
+	}
+
+	private String padString(String source) 
+	{
+		char paddingChar = ' ';
+		int size = 16;
+		int padLength = size - source.length() % size;
+	
+		for (int i = 0; i < padLength; i++) 
+		{
+			source += paddingChar;
+		}
+	
+		return source;
+	}
+
+	public static String getAesKeyInsecure()
+	{
+		if(AesKey == null)
+			generateAesKey(256);
+    	return bytesToHex(AesKey);
+	}
 }

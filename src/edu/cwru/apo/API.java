@@ -17,7 +17,7 @@ public class API extends Activity{
 	
 	private Context context;
 	
-	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport};
+	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport, checkAES};
 	
 	public API(Context context)
 	{
@@ -131,6 +131,17 @@ public class API extends Activity{
 			break;
 		case serviceReport:
 			// set up a serviceReport request
+			break;
+		case checkAES:
+			ApiCall checkAESCall = new ApiCall(context, callback, method);
+			RestClient checkAESClient = new RestClient(url, httpClient, RequestMethod.POST);
+			checkAESClient.AddParam("method", "checkAES");
+			checkAESClient.AddParam("text", "test");
+			checkAESClient.AddParam("key",Auth.getAesKeyInsecure());
+			//execute request
+			checkAESCall.execute(checkAESClient);
+			
+			result = true;
 			break;
 		}
 		return result;
