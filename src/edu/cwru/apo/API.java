@@ -1,5 +1,7 @@
 package edu.cwru.apo;
 
+import java.net.URLEncoder;
+
 import org.apache.http.client.HttpClient;
 import org.json.JSONObject;
 
@@ -146,9 +148,11 @@ public class API extends Activity{
 			RestClient checkAESClient = new RestClient(url, httpClient, RequestMethod.POST);
 			Auth.generateAesKey(256);
 			String key = Auth.getAesKeyInsecure();
+			String encrypted = Auth.AesEncrypt("Hello World", key, "fedcba9876543210");
 			checkAESClient.AddParam("method", "checkAES");
-			checkAESClient.AddParam("plain", "Hello World");
-			checkAESClient.AddParam("key", "01234567890abcde");
+			checkAESClient.AddParam("plain", "Hello World!!");
+			checkAESClient.AddParam("encrypted", encrypted);
+			checkAESClient.AddParam("key", key);
 			checkAESClient.AddParam("iv", "fedcba9876543210");
 			//execute request
 			checkAESCall.execute(checkAESClient);

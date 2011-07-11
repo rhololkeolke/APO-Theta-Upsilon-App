@@ -36,11 +36,12 @@ public class Profile extends Activity implements AsyncRestRequestListener<Method
 			if(result != null)
 			{
 				try {
-					String encrypted = result.getString("encrypted");
+					String serverDecrypted = result.getString("decrypted");
+					String serverEncrypted = result.getString("encrypted");
 					String key = result.getString("key");
 					String iv = result.getString("iv");
-					String decrypted = Auth.AesDecrypt(encrypted, key, iv);
-					Toast msg = Toast.makeText(getApplicationContext(), decrypted, Toast.LENGTH_LONG);
+					String appDecrypted = Auth.AesDecrypt(serverEncrypted, key, iv);
+					Toast msg = Toast.makeText(getApplicationContext(), appDecrypted + "\n" + serverDecrypted, Toast.LENGTH_LONG);
 					msg.show();
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block

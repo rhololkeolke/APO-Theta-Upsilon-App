@@ -324,6 +324,39 @@ public class Auth{
 		return input;
 	}
 	
+	public static String AesEncrypt(String input, String key, String iv)
+	{
+		SecretKeySpec keyspec = new SecretKeySpec(hexToBytes(key), "AES");
+		IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes());
+		
+		Cipher cipher;
+		try {
+			cipher = Cipher.getInstance("AES/CBC/NoPadding");
+			cipher.init(Cipher.ENCRYPT_MODE, keyspec, ivspec);
+			byte[] encrypted = cipher.doFinal(padString(input).getBytes());
+			return bytesToHex(encrypted);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidAlgorithmParameterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "";
+	}
+	
 	private static byte[] AesEncrypt(byte[] input, byte[] iv)
 	{
 		try {
@@ -396,7 +429,7 @@ public class Auth{
 			//SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
 			
 			Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
-			SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "AES");
+			SecretKeySpec keySpec = new SecretKeySpec(hexToBytes(key), "AES");
 			IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes());
 			cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
 			byte[] outText = cipher.doFinal(hexToBytes(input));
@@ -478,31 +511,8 @@ public class Auth{
 			return buffer;
 		}
 	}
-	
-	/*public static byte[] hexToBytes(String hex) 
-	{
-		String HEXINDEX = "0123456789abcdef";
-		int l = hex.length() / 2;
-		byte data[] = new byte[l];
-		int j = 0;
 
-		for (int i = 0; i < l; i++) 
-		{
-		    char c = hex.charAt(j++);
-		    int n, b;
-	
-		    n = HEXINDEX.indexOf(c);
-			b = (n & 0xf) << 4;
-			c = hex.charAt(j++);
-			n = HEXINDEX.indexOf(c);
-			b += (n & 0xf);
-			data[i] = (byte) b;
-		}
-
-		return data;
-	}*/
-
-	private String padString(String source) 
+	private static String padString(String source) 
 	{
 		char paddingChar = ' ';
 		int size = 16;
