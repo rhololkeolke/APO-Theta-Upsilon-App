@@ -1,6 +1,11 @@
 package edu.cwru.apo;
 
 import java.net.URLEncoder;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.http.client.HttpClient;
 import org.json.JSONObject;
@@ -19,7 +24,7 @@ public class API extends Activity{
 	
 	private Context context;
 	
-	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport, checkAES, aesServerEncryption, aesServerDecryption};
+	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport, checkAES, aesServerEncryption, aesServerDecryption, testHMAC};
 	
 	public API(Context context)
 	{
@@ -150,13 +155,41 @@ public class API extends Activity{
 			String key = Auth.getAesKeyInsecure();
 			String encrypted = Auth.AesEncrypt("Hello World", key, "fedcba9876543210");
 			checkAESClient.AddParam("method", "checkAES");
-			checkAESClient.AddParam("plain", "Hello World!!");
+			checkAESClient.AddParam("plain", "Hello World");
 			checkAESClient.AddParam("encrypted", encrypted);
 			checkAESClient.AddParam("key", key);
 			checkAESClient.AddParam("iv", "fedcba9876543210");
 			//execute request
 			checkAESCall.execute(checkAESClient);
 			
+			result = true;
+			break;
+		case testHMAC:
+			SecretKeySpec sk;
+			try {
+				sk = new SecretKeySpec("secret".getBytes(), "HmacMD5");
+				Mac mac;
+				mac = Mac.getInstance("HmacMD5");
+			    mac.init(sk);
+
+			    String testhmac = Auth.bytesToHex(mac.doFinal("testdata".getBytes()));
+			    
+			    ApiCall testHMACCall = new ApiCall(context, callback, method);
+				RestClient testHMACClient = new RestClient(url, httpClient, RequestMethod.POST);
+				
+				testHMACClient.AddParam("method", "testHMAC");
+				testHMACClient.AddParam("data", "testdata");
+				testHMACClient.AddParam("secret", "secret");
+				testHMACClient.AddParam("hmac", testhmac);
+				//execute request
+				testHMACCall.execute(testHMACClient);
+			} catch (InvalidKeyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			result = true;
 			break;
 		}

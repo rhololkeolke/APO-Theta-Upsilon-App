@@ -72,9 +72,26 @@ public class Auth{
 		
 		//concatenate all of the data
 		Iterator<NameValuePair> iter = params.iterator();
-		String data = "";
+
+		String method = "";
+		String installID = "";
+		String timestamp = "";
+		String userData = "";
+		NameValuePair temp;
 		while(iter.hasNext())
-			data = data + iter.next().getValue();
+		{
+			temp = iter.next();
+			if(temp.getName().equals("method"))
+				method = temp.getValue();
+			else if (temp.getName().equals("installID"))
+				installID = temp.getValue();
+			else if (temp.getName().equals("timestamp"))
+				timestamp = temp.getValue();
+			else if (temp.getName().equals("userData"))
+				userData = temp.getValue();
+		}
+		
+		String data = method + installID + timestamp + userData;
 		
 		//generate the HMAC based on the concatenated data
 		SecretKeySpec sk;
@@ -86,7 +103,7 @@ public class Auth{
 			mac = Mac.getInstance("HmacMD5");
 		    mac.init(sk);
 
-		    return URLEncoder.encode(Base64.encodeToString(mac.doFinal(data.getBytes()), Base64.DEFAULT));
+		    return bytesToHex(mac.doFinal(data.getBytes()));
 		    
 		} catch (InvalidKeyException e) {
 			// TODO Auto-generated catch block
@@ -180,7 +197,7 @@ public class Auth{
 			return null;
 		
 		// encrypt the last OTP
-		byte[] encrypted = AesEncrypt(lastOtp, URLDecoder.decode(Hmac)); // CHANGE THE IV
+		byte[] encrypted = AesEncrypt(lastOtp, Hmac); // CHANGE THE IV
 		
 		// encrypt will return the input if an error occurs
 		// Have to make sure the data was actually encrypted
@@ -190,7 +207,7 @@ public class Auth{
 		// everything went okay
 		// update the OTP and return it in Base64 encoded form
 		lastOtp = encrypted;
-		return URLEncoder.encode(Base64.encodeToString(lastOtp, Base64.DEFAULT));
+		return bytesToHex(lastOtp);
 	}
 	
 	public static boolean rollbackOtp()
@@ -215,10 +232,10 @@ public class Auth{
 	public static boolean setOtpAndHmac(String OTP, String Iv)
 	{
 
-		lastOtp = Base64.decode(URLDecoder.decode(OTP), Base64.DEFAULT);
-		byte[] AesIv = Base64.decode(URLDecoder.decode(Iv), Base64.DEFAULT);
+		lastOtp = hexToBytes(OTP);
+		byte[] AesIv = Iv.getBytes();
 		HmacKey = AesDecrypt(lastOtp, AesIv);
-
+		String hmacsecret = new String(HmacKey).trim();
 		if(HmacKey != lastOtp)
 			return true;
 		return false;
@@ -262,7 +279,9 @@ public class Auth{
 			String base64 = Base64.encodeToString(encryptedKey, Base64.DEFAULT);
 			base64 = URLEncoder.encode(base64);
 			// return result Base64 encoded
-			return base64;
+			String AEShex = bytesToHex(AesKey);
+			String hex = bytesToHex(encryptedKey);
+			return hex;
 			
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -299,7 +318,7 @@ public class Auth{
 		try {
 			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
 
-			Cipher cipher = Cipher.getInstance("AES/CFB/ZeroBytePadding");
+			Cipher cipher = Cipher.getInstance("AES/CBC/ZeroBytePadding");
 			cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(iv.substring(0, 16).getBytes()));
 			return cipher.doFinal(input);
 		} catch (NoSuchAlgorithmException e) {
@@ -362,7 +381,7 @@ public class Auth{
 		try {
 			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
 
-			Cipher cipher = Cipher.getInstance("AES/CFB/ZeroBytePadding");
+			Cipher cipher = Cipher.getInstance("AES/CBC/ZeroBytePadding");
 			cipher.init(Cipher.ENCRYPT_MODE, keySpec, new IvParameterSpec(iv));
 			return cipher.doFinal(input);
 		} catch (NoSuchAlgorithmException e) {
@@ -393,7 +412,7 @@ public class Auth{
 		try {
 			SecretKeySpec keySpec = new SecretKeySpec(AesKey, "AES");
 			
-			Cipher cipher = Cipher.getInstance("AES/CFB/ZeroBytePadding");
+			Cipher cipher = Cipher.getInstance("AES/CBC/ZeroBytePadding");
 			cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(aesIv));
 			return cipher.doFinal(input);
 		} catch (NoSuchAlgorithmException e) {

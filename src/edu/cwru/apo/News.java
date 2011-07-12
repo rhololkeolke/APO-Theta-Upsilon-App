@@ -24,11 +24,20 @@ public class News extends Activity implements AsyncRestRequestListener<Methods, 
 		setContentView(R.layout.news);
 		text = (TextView)findViewById(R.id.newsText);
 		API api = new API(this);
+		
 		if(!api.callMethod(Methods.checkCredentials, this, (String[])null))
 		{
 			Toast msg = Toast.makeText(getApplicationContext(), "Something went wrong", Toast.LENGTH_LONG);
 			msg.show();
 		}
+		
+		/*
+		if(!api.callMethod(Methods.testHMAC, this, (String[])null))
+		{
+			Toast msg = Toast.makeText(getApplicationContext(), "Something went wrong", Toast.LENGTH_LONG);
+			msg.show();
+		}
+		*/
 	}
 
 	public void onRestRequestComplete(Methods method, JSONObject result) {
@@ -83,6 +92,13 @@ public class News extends Activity implements AsyncRestRequestListener<Methods, 
 			{
 				Toast msg = Toast.makeText(getApplicationContext(), "JSON error: No JSON Object to read", Toast.LENGTH_LONG);
 				msg.show();
+			}
+		}
+		else if(method == Methods.testHMAC)
+		{
+			if(result != null)
+			{
+				text.setText(result.toString());
 			}
 		}
 		else
