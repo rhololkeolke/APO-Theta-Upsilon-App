@@ -1,5 +1,8 @@
 package edu.cwru.apo;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
 import org.apache.http.client.HttpClient;
 import org.json.JSONObject;
 
@@ -13,7 +16,7 @@ import android.os.AsyncTask;
 public class API extends Activity{
 	
 	private static HttpClient httpClient = null;
-	private static String url = "https://apo.case.edu:8090/api/api.php";
+	private static String secureUrl = "https://apo.case.edu:8090/api/api.php";
 	
 	private Context context;
 	
@@ -24,6 +27,8 @@ public class API extends Activity{
 		this.context = context;
 		if(httpClient == null)
 			httpClient = new TrustAPOHttpClient(this.context); // context leak?
+		if(Auth.Hmac == null)
+			Auth.Hmac = new DynamicHmac();
 	}
 	
 	public boolean callMethod(Methods method, AsyncRestRequestListener<Methods, JSONObject> callback, String...params)
@@ -37,17 +42,14 @@ public class API extends Activity{
 			if(params[0] == null || params[1] == null)
 				break;
 			
-			// set up a login request
+			// set up a login request NOTE: Must be HTTPS!!
 			ApiCall loginCall = new ApiCall(context, callback, method, "Logging In", "Please Wait");
-			RestClient loginClient = new RestClient(url, httpClient, RequestMethod.POST);
-			String passHass =  Auth.md5(params[1]);		//only used to see that the md5 is not working correctly
-			Auth.generateAesKey(256);
-			String aes = Auth.getAesKey(context.getApplicationContext());
+			RestClient loginClient = new RestClient(secureUrl, httpClient, RequestMethod.POST);
 			loginClient.AddParam("method", "login");
 			loginClient.AddParam("user", params[0]);
-			loginClient.AddParam("pass", Auth.md5(params[1]));		//temp solution for password it to not use the md5 method and just copy in the password hash string literal
-			loginClient.AddParam("AESkey", aes );
+			loginClient.AddParam("pass", Auth.md5(params[1]));
 			loginClient.AddParam("installID", Installation.id(context.getApplicationContext()));
+			loginClient.AddParam("secretKey", Auth.Hmac.getSecretKey().toString());
 			
 			//execute the call
 			loginCall.execute(loginClient);
@@ -56,20 +58,26 @@ public class API extends Activity{
 		case checkCredentials:
 			// set up a checkCredentials request
 			ApiCall checkCredentialsCall = new ApiCall(context, callback, method);
-			RestClient checkCredentialsClient = new RestClient(url, httpClient, RequestMethod.POST);
-			
-			// check if HMAC key and AES key exist
-			if(!Auth.HmacKeyExists() || !Auth.AesKeyExists())
-			{
-				break;
-			}
+			RestClient checkCredentialsClient = new RestClient(secureUrl, httpClient, RequestMethod.POST);
 			
 			// if both exist add parameters to call and execute
+			String installID = Installation.id(context.getApplicationContext());
+			String timestamp = Long.toString(Auth.getTimestamp());
+			String data = "checkCredentials" + installID + timestamp;
 			checkCredentialsClient.AddParam("method", "checkCredentials");
-			checkCredentialsClient.AddParam("installID", Installation.id(context.getApplicationContext()));
-			checkCredentialsClient.AddParam("timestamp", Long.toString(Auth.getTimestamp()));
-			checkCredentialsClient.AddParam("hmac", Auth.getHmac(checkCredentialsClient));
-			checkCredentialsClient.AddParam("otp", Auth.getOtp());
+			checkCredentialsClient.AddParam("installID", installID);
+			checkCredentialsClient.AddParam("timestamp", timestamp);
+			try {
+				checkCredentialsClient.AddParam("hmac", Auth.Hmac.generate(data).toString());
+			} catch (InvalidKeyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}
 			
 			//execute the call
 			checkCredentialsCall.execute(checkCredentialsClient);
@@ -89,20 +97,6 @@ public class API extends Activity{
 			break;
 		case serviceReport:
 			// set up a serviceReport request
-			break;
-		case checkAES:
-			//this will be removed once the crypto is working
-			ApiCall checkAesCall = new ApiCall(context, callback, method);
-			RestClient checkAesClient = new RestClient(url, httpClient, RequestMethod.POST);
-			
-			checkAesClient.AddParam("method", "checkAES");
-			checkAesClient.AddParam("key", Auth.getAesKeyInsecure());
-			checkAesClient.AddParam("text", "test");
-			checkAesCall.execute(checkAesClient);
-			result = true;
-			break;
-		case decryptRSA:
-			//this will be removed once the crypto is working
 			break;
 		}
 		return result;
