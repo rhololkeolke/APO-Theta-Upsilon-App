@@ -11,7 +11,7 @@ public class Hmac {
 	
 	protected byte[] secretKey = null;
 	protected int defaultKeyLength = 128;
-	protected String mode = "HmacMD5";
+	protected String mode = "HmacSHA1";
 	
 	public Hmac()
 	{

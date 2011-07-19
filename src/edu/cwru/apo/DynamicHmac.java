@@ -10,6 +10,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class DynamicHmac extends Hmac {
 	
 	private int counter = 0;
+	private int increment = 0;
 	
 	public DynamicHmac()
 	{
@@ -24,6 +25,16 @@ public class DynamicHmac extends Hmac {
 		secretKey = new byte[keyLength];
 		random.nextBytes(secretKey);
 		this.mode = mode;
+	}
+	
+	public void setCounter(int count)
+	{
+		counter = count;
+	}
+	
+	public void setIncrement(int inc)
+	{
+		increment = inc;
 	}
 	
 	public Hex generate(String data) throws InvalidKeyException,NoSuchAlgorithmException
@@ -42,6 +53,7 @@ public class DynamicHmac extends Hmac {
 	{
 		
 		try {
+			counter += increment;						//increments the counter to the next value
 			if(secretKey == null)
 				return null;
 			SecretKeySpec sk = new SecretKeySpec(secretKey, mode);
@@ -50,7 +62,7 @@ public class DynamicHmac extends Hmac {
 		    mac.init(sk);
 		    
 		    byte[] hmac_result =  mac.doFinal(intToBytes(counter));
-		    
+		    String result = new Hex(hmac_result).toString();
 		    // make sure the index will be inbounds
 		    if(hmac_result.length < 19)
 		    	return null;
@@ -64,13 +76,16 @@ public class DynamicHmac extends Hmac {
 		    						| (hmac_result[offset+1] & 0xff) << 16
 		    						| (hmac_result[offset+2] & 0xff) << 8
 		    						| (hmac_result[offset+3] & 0xff));
-		    
+		    String secret = new Hex(secretKey).toString();
+		    byte[] out = intToBytes(bin_code);
 		    return intToBytes(bin_code);
 		} catch (InvalidKeyException e) {
 			// TODO Auto-generated catch block
+			counter -= increment;				//incase something goes wrong, counter will be returned to previous state
 			e.printStackTrace();
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
+			counter -= increment;				//incase something goes wrong, counter will be returned to previous state
 			e.printStackTrace();
 		}
 		return null;

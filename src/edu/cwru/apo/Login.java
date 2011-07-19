@@ -78,6 +78,8 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 					String requestStatus = result.getString("requestStatus");
 					if(requestStatus.compareTo("valid login") == 0)
 					{
+						Auth.Hmac.setCounter(result.getInt("counter"));
+						Auth.Hmac.setIncrement(result.getInt("increment"));
 						Intent homeIntent = new Intent(Login.this, Home.class);
 						Login.this.startActivity(homeIntent);
 						finish();
