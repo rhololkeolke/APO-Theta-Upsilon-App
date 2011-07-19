@@ -63,12 +63,12 @@ public class API extends Activity{
 			// if both exist add parameters to call and execute
 			String installID = Installation.id(context.getApplicationContext());
 			String timestamp = Long.toString(Auth.getTimestamp());
-			String data = "checkCredentials" + installID + timestamp;
+			String data = "checkCredentials" + timestamp + installID;
 			checkCredentialsClient.AddParam("method", "checkCredentials");
 			checkCredentialsClient.AddParam("installID", installID);
 			checkCredentialsClient.AddParam("timestamp", timestamp);
 			try {
-				checkCredentialsClient.AddParam("hmac", Auth.Hmac.generate(data).toString());
+				checkCredentialsClient.AddParam("HMAC", Auth.Hmac.generate(data).toString());
 			} catch (InvalidKeyException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

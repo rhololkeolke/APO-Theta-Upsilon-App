@@ -45,7 +45,6 @@ public class DynamicHmac extends Hmac {
 		Mac mac;
 		mac = Mac.getInstance(mode);
 	    mac.init(sk);
-
 	    return new Hex(mac.doFinal(data.getBytes()));
 	}
 	
@@ -61,15 +60,16 @@ public class DynamicHmac extends Hmac {
 			mac = Mac.getInstance(mode);
 		    mac.init(sk);
 		    
-		    byte[] hmac_result =  mac.doFinal(intToBytes(counter));
-		    String result = new Hex(hmac_result).toString();
+		    //byte[] hmac_result =  mac.doFinal(intToBytes(counter));
+		    byte[] hmac_result =  mac.doFinal((""+counter).getBytes());
+
 		    // make sure the index will be inbounds
 		    if(hmac_result.length < 19)
 		    	return null;
-
+		    
 		    // get the last 4 bits of the 19th byte of the hmac_result
 		    // this acts as an offset
-		    int offset = (int)hmac_result[19] & 0xf; 
+		    int offset = (int)(hmac_result[19] & 0xf); 
 		    
 		    // get the binary code
 		    int bin_code = (int)((hmac_result[offset] & 0x7f) << 24
@@ -77,8 +77,7 @@ public class DynamicHmac extends Hmac {
 		    						| (hmac_result[offset+2] & 0xff) << 8
 		    						| (hmac_result[offset+3] & 0xff));
 		    String secret = new Hex(secretKey).toString();
-		    byte[] out = intToBytes(bin_code);
-		    return intToBytes(bin_code);
+		    return (""+bin_code).getBytes();
 		} catch (InvalidKeyException e) {
 			// TODO Auto-generated catch block
 			counter -= increment;				//incase something goes wrong, counter will be returned to previous state
