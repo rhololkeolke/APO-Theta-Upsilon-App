@@ -73,13 +73,20 @@ public class Auth{
 		edit.putString("secretKey", Auth.Hmac.getSecretKey().toString());
 		edit.putInt("counter", Auth.Hmac.getCounter());
 		edit.putInt("increment", Auth.Hmac.getIncrement());
+		edit.commit();
 	}
 	
 	public static void loadKeys(SharedPreferences prefs)
 	{
 		Hex secretKey = new Hex(prefs.getString("secretKey", "0"));
-		int counter = prefs.getInt("counter", 0);
+		int counter = prefs.getInt("counter", -1);
 		int increment = prefs.getInt("increment", 0);
+		if(secretKey.toString().compareTo("0") == 0)
+			return;
+		if(counter == -1)
+			return;
+		if(increment == 0)
+			return;
 		Auth.Hmac = new DynamicHmac(secretKey, counter, increment);
 	}
 }
