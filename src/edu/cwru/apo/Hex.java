@@ -14,15 +14,12 @@ public class Hex {
 	public Hex(byte[] input)
 	{
 		int len = input.length;
-		
 		StringBuilder sb = new StringBuilder(len << 1);
-		
-		for(int i=0; i<len; i++)
+		for(int i = 0; i<len; i++)
 		{
 			sb.append(Character.forDigit((input[i] & 0xf0) >> 4, 16));
-			sb.append(Character.forDigit((input[i] & 0x0f), 16));
+			sb.append(Character.forDigit(input[i] & 0x0f, 16));
 		}
-		
 		hex = sb.toString();
 	}
 	

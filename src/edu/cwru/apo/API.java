@@ -1,5 +1,6 @@
 package edu.cwru.apo;
 
+import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -47,8 +48,8 @@ public class API extends Activity{
 			RestClient loginClient = new RestClient(secureUrl, httpClient, RequestMethod.POST);
 			loginClient.AddParam("method", "login");
 			loginClient.AddParam("user", params[0]);
-			loginClient.AddParam("pass", Auth.md5(params[1]));
-			loginClient.AddParam("installID", Installation.id(context.getApplicationContext()));
+			loginClient.AddParam("pass", Auth.md5(params[1]).toString());
+			loginClient.AddParam("installID", URLEncoder.encode(Installation.id(context.getApplicationContext())));
 			loginClient.AddParam("secretKey", Auth.Hmac.getSecretKey().toString());
 			
 			//execute the call
