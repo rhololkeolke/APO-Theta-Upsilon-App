@@ -34,6 +34,7 @@ import org.apache.http.NameValuePair;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.util.Base64;
 
 public class Auth{
@@ -64,5 +65,21 @@ public class Auth{
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public static void saveKeys(SharedPreferences prefs)
+	{
+		Editor edit = prefs.edit();
+		edit.putString("secretKey", Auth.Hmac.getSecretKey().toString());
+		edit.putInt("counter", Auth.Hmac.getCounter());
+		edit.putInt("increment", Auth.Hmac.getIncrement());
+	}
+	
+	public static void loadKeys(SharedPreferences prefs)
+	{
+		Hex secretKey = new Hex(prefs.getString("secretKey", "0"));
+		int counter = prefs.getInt("counter", 0);
+		int increment = prefs.getInt("increment", 0);
+		Auth.Hmac = new DynamicHmac(secretKey, counter, increment);
 	}
 }

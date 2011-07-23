@@ -121,4 +121,18 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 			msg.show();
 		}
 	}
+	
+	/*@Override
+	protected void onPause()
+	{
+		Auth.saveKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
+	}
+	
+	@Override
+	protected void onResume()
+	{
+		Auth.loadKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
+	}*/
+	
 }	
+

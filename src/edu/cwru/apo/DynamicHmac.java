@@ -19,12 +19,29 @@ public class DynamicHmac extends Hmac {
 		random.nextBytes(secretKey);
 	}
 	
+	public DynamicHmac(Hex secretKey, int counter, int increment)
+	{
+		this.secretKey = secretKey.toBytes();
+		this.counter = counter;
+		this.increment = increment;
+	}
+	
 	public DynamicHmac(String mode, int keyLength)
 	{
 		SecureRandom random = new SecureRandom();
 		secretKey = new byte[keyLength];
 		random.nextBytes(secretKey);
 		this.mode = mode;
+	}
+	
+	public int getCounter()
+	{
+		return counter;
+	}
+	
+	public int getIncrement()
+	{
+		return increment;
 	}
 	
 	public void setCounter(int count)

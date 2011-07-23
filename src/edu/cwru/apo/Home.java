@@ -50,5 +50,17 @@ public class Home extends Activity implements OnItemClickListener{
 			//do nothing
 		}
 	}
+	
+	/*@Override
+	protected void onPause()
+	{
+		Auth.saveKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
+	}
+	
+	@Override
+	protected void onResume()
+	{
+		Auth.loadKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
+	}*/
 
 }

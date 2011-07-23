@@ -23,6 +23,15 @@ public class Hex {
 		hex = sb.toString();
 	}
 	
+	public Hex(String input) {
+		input.toLowerCase();
+		
+		if(Pattern.matches("[0-9a-f]+", input))
+		{
+			hex = input;
+		}
+	}
+
 	// Use Regex to make sure input is correct format
 	// if so save it, otherwise set it to null
 	public boolean toHex(String input)
