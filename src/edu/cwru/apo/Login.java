@@ -19,13 +19,17 @@
 
 package edu.cwru.apo;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.cwru.apo.API.Methods;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -38,6 +42,7 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 	private Button forgot_btn;
 	private EditText username;
 	private EditText password;
+	private static SQLiteDatabase database = null;
 	
 	public static final String PREF_FILE_NAME = "PrefFile";
 	
@@ -88,7 +93,8 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 		}
 	}
 
-	public void onRestRequestComplete(Methods method, JSONObject result) {
+	public void onRestRequestComplete(Methods method, JSONObject result) 
+	{
 		if(method == Methods.login)
 		{
 			if(result != null)
@@ -99,9 +105,16 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 					{
 						Auth.Hmac.setCounter(result.getInt("counter"));
 						Auth.Hmac.setIncrement(result.getInt("increment"));
-						Intent homeIntent = new Intent(Login.this, Home.class);
-						Login.this.startActivity(homeIntent);
-						finish();
+						PhoneOpenHelper db = new PhoneOpenHelper(this);
+						if (database == null)
+							database = db.getWritableDatabase();
+						API api = new API(this);
+						if(!api.callMethod(Methods.phone, this, (String[])null))
+						{
+							Toast msg = Toast.makeText(this, "Error: Calling phone", Toast.LENGTH_LONG);
+							msg.show();
+						}
+						
 					}
 					else if(requestStatus.compareTo("invalid username") == 0)
 					{
@@ -132,6 +145,56 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 			{
 				Toast msg = Toast.makeText(getApplicationContext(), "Could not contact web server.  Please check your connection", Toast.LENGTH_LONG);
 				msg.show();
+			}
+		}
+		else if(method == Methods.phone)
+		{
+			if(result != null)
+			{
+				try {
+					String requestStatus = result.getString("requestStatus");
+					if(requestStatus.compareTo("success") == 0)
+					{
+						int numbros = result.getInt("numBros");
+						JSONArray caseID = result.getJSONArray("caseID");
+						JSONArray first = result.getJSONArray("first");
+						JSONArray last = result.getJSONArray("last");
+						JSONArray phone = result.getJSONArray("phone");
+						JSONArray family = result.getJSONArray("family");
+						ContentValues values;
+						for(int i = 0; i < numbros; i++)
+						{
+							values = new ContentValues();
+							values.put("_id", caseID.getString(i));
+							values.put("first", first.getString(i));
+							values.put("last", last.getString(i));
+							values.put("phone", phone.getString(i));
+							values.put("family", family.getString(i));
+							database.replace("phoneDB", null, values);
+						}
+						Intent homeIntent = new Intent(Login.this, Home.class);
+						Login.this.startActivity(homeIntent);
+						finish();
+					}
+					else if(requestStatus.compareTo("timestamp invalid") == 0)
+					{
+						Toast msg = Toast.makeText(this, "Invalid timestamp.  Please try again.", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else if(requestStatus.compareTo("HMAC invalid") == 0)
+					{
+						Toast msg = Toast.makeText(this, "You have been logged out by the server.  Please log in again.", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else
+					{
+						Toast msg = Toast.makeText(this, "Invalid requestStatus", Toast.LENGTH_LONG);
+						msg.show();
+					}
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		else

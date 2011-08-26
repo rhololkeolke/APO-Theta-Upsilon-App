@@ -27,6 +27,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 import org.apache.http.client.HttpClient;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.cwru.apo.RestClient.RequestMethod;
@@ -34,6 +35,8 @@ import edu.cwru.apo.RestClient.RequestMethod;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 
 public class API extends Activity{
@@ -114,15 +117,82 @@ public class API extends Activity{
 			break;
 		case getContract:
 			// set up a getContract request
+			ApiCall getContractCall = new ApiCall(context, callback, method);
+			RestClient getContractClient = new RestClient(secureUrl, httpClient, RequestMethod.POST);
+			
+			// if both exist add parameters to call and execute
+			String contractinstallID = Installation.id(context.getApplicationContext());
+			String contracttimestamp = Long.toString(Auth.getTimestamp());
+			String contractdata = "getContract" + contracttimestamp + contractinstallID;
+			getContractClient.AddParam("method", "getContract");
+			getContractClient.AddParam("installID", contractinstallID);
+			getContractClient.AddParam("timestamp", contracttimestamp);
+			try {
+				getContractClient.AddParam("HMAC", Auth.Hmac.generate(contractdata).toString());
+			} catch (InvalidKeyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}
+			
+			//execute the call
+			getContractCall.execute(getContractClient);
+			result = true;
 			break;
+
 		case phone:
 			// set up a phone request
+			ApiCall phoneCall = new ApiCall(context, callback, method, "Updating User Directory", "Please Wait");
+			RestClient phoneClient = new RestClient(secureUrl, httpClient, RequestMethod.POST);
+			
+			// if both exist add parameters to call and execute
+			String phoneInstallID = Installation.id(context.getApplicationContext());
+			String phoneTimestamp = Long.toString(Auth.getTimestamp());
+			
+			JSONObject phoneUserData = new JSONObject();
+			try {
+				//phoneUserData.put("updateTime", getUpdateTime(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE)));
+				phoneUserData.put("updateTime", "0");
+			} catch (JSONException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			String phoneUD = URLEncoder.encode(phoneUserData.toString());
+			String phoneData = "phone" + phoneTimestamp + phoneInstallID + phoneUserData.toString();
+			phoneClient.AddParam("method", "phone");
+			phoneClient.AddParam("installID", phoneInstallID);
+			phoneClient.AddParam("timestamp", phoneTimestamp);
+			phoneClient.AddParam("userData", phoneUD);
+			try {
+				phoneClient.AddParam("HMAC", Auth.Hmac.generate(phoneData).toString());
+			} catch (InvalidKeyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}
+			
+			//execute the call
+			phoneCall.execute(phoneClient);
+			result = true;
 			break;
 		case serviceReport:
 			// set up a serviceReport request
 			break;
 		}
 		return result;
+	}
+	
+	private long getUpdateTime(SharedPreferences prefs)
+	{
+		return prefs.getLong("updateTime", 0);
 	}
 	
 	private class ApiCall extends AsyncTask<RestClient, Void, JSONObject>
