@@ -66,7 +66,7 @@ public class ImageAdapter extends BaseAdapter {
 	
 	// contains the images that will represent each button
 	private Integer[] mThumbIds = {
-			R.drawable.news,
+			R.drawable.report,
 			R.drawable.contract,
 			R.drawable.profile,
 			R.drawable.directory

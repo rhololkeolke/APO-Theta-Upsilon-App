@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent">
+    <ScrollView 
+    android:layout_width="match_parent" 
+    android:id="@+id/scrollView1" 
+    android:layout_height="wrap_content">
+        <LinearLayout 
+        android:id="@+id/linearLayout1" 
+        android:orientation="vertical"
+        android:layout_width="match_parent" 
+        android:layout_height="match_parent">
+        
+            <TextView 
+            android:text="Project Name:" 
+            android:id="@+id/textView1" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content">
+            </TextView>
+            
+        	
+        	<EditText 
+        	android:id="@+id/txtProjectName" 
+        	android:layout_width="match_parent" 
+        	android:layout_height="wrap_content">
+        	</EditText>
+        	<requestFocus>
+        	</requestFocus>
+        	
+        	<TextView 
+            android:text="Project Location:" 
+            android:id="@+id/textView2" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content">
+            </TextView>
+            
+        	<EditText 
+        	android:id="@+id/txtProjectLocation" 
+        	android:layout_width="match_parent" 
+        	android:layout_height="wrap_content">
+        	</EditText>
+        	
+        	<TextView 
+            android:text="Project Date:" 
+            android:id="@+id/textView3" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content">
+            </TextView>
+            
+            <DatePicker 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content" 
+            android:id="@+id/datePicker">
+            </DatePicker>
+            
+            <TextView 
+            android:text="Type of Project:" 
+            android:id="@+id/textView4" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content">
+            </TextView>
+            
+            <RadioGroup 
+            android:id="@+id/groupTypeProject" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content">
+                <RadioButton 
+                	android:layout_width="wrap_content" 
+                	android:id="@+id/radioIn" 
+                	android:layout_height="wrap_content" 
+                	android:text="Inside" 
+                	android:checked="true">
+                </RadioButton>
+                <RadioButton 
+                	android:layout_width="wrap_content" 
+                	android:id="@+id/radioOut" 
+                	android:layout_height="wrap_content" 
+                	android:text="Outside">
+                </RadioButton>
+            </RadioGroup>
+            
+            <TextView 
+            android:text="Type of Service:" 
+            android:id="@+id/textView5" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content">
+            </TextView>
+            
+            <RadioGroup 
+            android:id="@+id/groupTypeService" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content">
+                <RadioButton 
+                	android:layout_width="wrap_content" 
+                	android:id="@+id/radio1" 
+                	android:layout_height="wrap_content" 
+                	android:text="Service to Chapter" 
+                	android:checked="true">
+                </RadioButton>
+                <RadioButton 
+                	android:layout_width="wrap_content" 
+                	android:id="@+id/radio2" 
+                	android:layout_height="wrap_content" 
+                	android:text="Service to Campus">
+                </RadioButton>
+                 <RadioButton 
+                	android:layout_width="wrap_content" 
+                	android:id="@+id/radio3" 
+                	android:layout_height="wrap_content" 
+                	android:text="Service to Community">
+                </RadioButton>
+                <RadioButton 
+                	android:layout_width="wrap_content" 
+                	android:id="@+id/radio4" 
+                	android:layout_height="wrap_content" 
+                	android:text="Service to Country">
+                </RadioButton>
+            </RadioGroup>
+            
+            <TextView 
+            android:text="Inside/Outside:" 
+            android:id="@+id/textView6" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content">
+            </TextView>
+            
+            <CheckBox 
+            android:text="Check if Outside Event" 
+            android:id="@+id/chkOut" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content">
+            </CheckBox>
+            
+            <TextView 
+            android:text="Travel Time(minutes):" 
+            android:id="@+id/textView7" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content">
+            </TextView>
+            
+            <EditText 
+        	android:id="@+id/txtTravelTime" 
+        	android:layout_width="match_parent" 
+        	android:layout_height="wrap_content">
+        	</EditText>
+            
+            <TextView 
+            android:text="Please enter each brother/pledge below:" 
+            android:id="@+id/textView8" 
+            android:layout_width="wrap_content" 
+            android:layout_height="wrap_content">
+            </TextView>
+            
+            <LinearLayout 
+        	android:id="@+id/linearLayout1" 
+        	android:orientation="horizontal"
+        	android:layout_width="match_parent" 
+        	android:layout_height="match_parent">
+            
+            	<LinearLayout 
+        		android:id="@+id/linearLayout1" 
+        		android:orientation="vertical"
+        		android:layout_width="wrap_content" 
+        		android:layout_height="match_parent" 
+        		android:layout_weight="1">
+            
+            		<TextView 
+		            android:text="Name:" 
+		            android:id="@+id/textView9" 
+		            android:layout_width="wrap_content" 
+		            android:layout_height="wrap_content">
+		            </TextView>
+		            
+            		<MultiAutoCompleteTextView 
+            		android:id="@+id/txtName" 
+            		android:layout_width="match_parent" 
+            		android:layout_height="wrap_content">
+            		</MultiAutoCompleteTextView>
+		            
+		            <TextView 
+		            android:text="Hours:" 
+		            android:id="@+id/textView10" 
+		            android:layout_width="wrap_content" 
+		            android:layout_height="wrap_content">
+		            </TextView>
+		            
+		            <EditText 
+		        	android:id="@+id/txtHours" 
+		        	android:layout_width="match_parent" 
+		        	android:layout_height="wrap_content">
+		        	</EditText>
+		            
+		            <TextView 
+		            android:text="Minutes:" 
+		            android:id="@+id/textView11" 
+		            android:layout_width="wrap_content" 
+		            android:layout_height="wrap_content">
+		            </TextView>
+		            
+		            <EditText 
+		        	android:id="@+id/txtMinutes" 
+		        	android:layout_width="match_parent" 
+		        	android:layout_height="wrap_content">
+		        	</EditText>
+		        	
+		        	<CheckBox 
+		            android:text="Driver?" 
+		            android:id="@+id/chkDriver" 
+		            android:layout_width="wrap_content" 
+		            android:layout_height="wrap_content">
+		            </CheckBox>
+            
+            	</LinearLayout>
+            	
+            	<Button 
+            	android:text="Add" 
+            	android:id="@+id/btnAdd" 
+            	android:layout_width="wrap_content" 
+            	android:layout_height="match_parent"
+            	android:layout_weight="0.25">
+            	</Button>
+            	
+            </LinearLayout>
+            
+            <TableLayout 
+            android:id="@+id/tblBros" 
+            android:layout_width="match_parent" 
+            android:layout_height="wrap_content"
+            android:stretchColumns="1">
+            
+				<TableRow 
+				android:id="@+id/tableRow1" 
+				android:layout_width="wrap_content" 
+				android:layout_height="wrap_content">
+				
+				<TextView 
+	            android:text="Name" 
+	            android:id="@+id/textView12" 
+	            android:layout_width="wrap_content" 
+	            android:layout_height="wrap_content">
+	            </TextView>
+		            
+		        <TextView 
+	            android:text="Hours" 
+	            android:id="@+id/textView13" 
+	            android:layout_width="wrap_content" 
+	            android:layout_height="wrap_content">
+	            </TextView>
+	            
+	            <TextView 
+	            android:text="Minutes" 
+	            android:id="@+id/textView14" 
+	            android:layout_width="wrap_content" 
+	            android:layout_height="wrap_content">
+	            </TextView>
+	            
+	            <TextView 
+	            android:text="Driver?" 
+	            android:id="@+id/textView15" 
+	            android:layout_width="wrap_content" 
+	            android:layout_height="wrap_content">
+	            </TextView>
+				
+				</TableRow>
+				
+			</TableLayout>
+            
+            <Button 
+           	android:text="Submit" 
+           	android:id="@+id/btnSubmit" 
+           	android:layout_width="match_parent" 
+           	android:layout_height="wrap_content"
+           	android:layout_weight="0.25">
+            </Button>
+            
+        </LinearLayout>
+    </ScrollView>
+    
+    
+    
+</LinearLayout>

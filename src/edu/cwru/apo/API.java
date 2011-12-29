@@ -117,7 +117,7 @@ public class API extends Activity{
 			break;
 		case getContract:
 			// set up a getContract request
-			ApiCall getContractCall = new ApiCall(context, callback, method);
+			ApiCall getContractCall = new ApiCall(context, callback, method, "Loading", "Please Wait");
 			RestClient getContractClient = new RestClient(secureUrl, httpClient, RequestMethod.POST);
 			
 			// if both exist add parameters to call and execute
@@ -184,7 +184,51 @@ public class API extends Activity{
 			result = true;
 			break;
 		case serviceReport:
-			// set up a serviceReport request
+			// set up a phone request
+			ApiCall reportCall = new ApiCall(context, callback, method, "Updating User Directory", "Please Wait");
+			RestClient reportClient = new RestClient(secureUrl, httpClient, RequestMethod.POST);
+			
+			// if both exist add parameters to call and execute
+			String reportInstallID = Installation.id(context.getApplicationContext());
+			String reportTimestamp = Long.toString(Auth.getTimestamp());
+			
+			JSONObject reportUserData = new JSONObject();
+			try {
+				reportUserData.put("date", params[0]);
+				reportUserData.put("projectName", params[1]);
+				reportUserData.put("projectLocation", params[2]);
+				reportUserData.put("inOut", params[3]);
+				reportUserData.put("offCampus", params[4]);
+				reportUserData.put("serviceType", params[5]);
+				reportUserData.put("travelTime", params[6]);
+				reportUserData.put("comments", params[7]);
+				reportUserData.put("numBros", params[8]);
+				reportUserData.put("brothers", params[9]);
+			} catch (JSONException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			String reportUD = URLEncoder.encode(reportUserData.toString());
+			String reportData = "phone" + reportTimestamp + reportInstallID + reportUserData.toString();
+			reportClient.AddParam("method", "serviceReport");
+			reportClient.AddParam("installID", reportInstallID);
+			reportClient.AddParam("timestamp", reportTimestamp);
+			reportClient.AddParam("userData", reportUD);
+			try {
+				reportClient.AddParam("HMAC", Auth.Hmac.generate(reportData).toString());
+			} catch (InvalidKeyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			} catch (NoSuchAlgorithmException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}
+			
+			//execute the call
+			reportCall.execute(reportClient);
+			result = true;
 			break;
 		}
 		return result;

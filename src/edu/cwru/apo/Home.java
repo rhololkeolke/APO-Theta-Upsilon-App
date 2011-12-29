@@ -51,9 +51,9 @@ public class Home extends Activity implements OnItemClickListener{
 			long id) {
 		switch(position){
 		case 0:
-			// launch news activity
-			Intent newsIntent = new Intent(Home.this, News.class);
-			Home.this.startActivity(newsIntent);
+			// launch service report activity
+			Intent reportIntent = new Intent(Home.this, Report.class);
+			Home.this.startActivity(reportIntent);
 			break;
 		case 1:
 			// launch Contract activity
