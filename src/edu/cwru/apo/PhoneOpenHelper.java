@@ -7,7 +7,6 @@ import org.json.JSONObject;
 import edu.cwru.apo.API.Methods;
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.widget.Toast;
@@ -23,7 +22,7 @@ public class PhoneOpenHelper extends SQLiteOpenHelper implements AsyncRestReques
     
     PhoneOpenHelper(Context context) {
         super(context, PHONE_TABLE_NAME, null, DATABASE_VERSION);
-        this.context = context;
+        PhoneOpenHelper.context = context;
     }
 
     @Override
@@ -66,7 +65,7 @@ public class PhoneOpenHelper extends SQLiteOpenHelper implements AsyncRestReques
 						JSONArray last = result.getJSONArray("last");
 						JSONArray phone = result.getJSONArray("phone");
 						JSONArray family = result.getJSONArray("family");
-						ContentValues values;
+						ContentValues values; 
 						for(int i = 0; i < numbros; i++)
 						{
 							values = new ContentValues();

@@ -22,6 +22,7 @@
         <activity android:name=".Directory"></activity>
         <activity android:name=".News"></activity>
         <activity android:name=".Profile"></activity>
+        <activity android:name=".Report"></activity>
 
     </application>
 </manifest>

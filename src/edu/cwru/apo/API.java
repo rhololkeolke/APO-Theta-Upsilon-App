@@ -36,7 +36,6 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.os.AsyncTask;
 
 public class API extends Activity{
@@ -46,7 +45,7 @@ public class API extends Activity{
 	
 	private Context context;
 	
-	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport, checkAES, decryptRSA};
+	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport, checkAES, decryptRSA, users};
 	
 	public API(Context context)
 	{
@@ -185,7 +184,7 @@ public class API extends Activity{
 			break;
 		case serviceReport:
 			// set up a phone request
-			ApiCall reportCall = new ApiCall(context, callback, method, "Updating User Directory", "Please Wait");
+			ApiCall reportCall = new ApiCall(context, callback, method, "Submitting Service Report", "Please Wait");
 			RestClient reportClient = new RestClient(secureUrl, httpClient, RequestMethod.POST);
 			
 			// if both exist add parameters to call and execute

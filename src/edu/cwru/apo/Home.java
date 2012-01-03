@@ -19,15 +19,11 @@
 
 package edu.cwru.apo;
 
-import org.json.JSONObject;
-
-import edu.cwru.apo.API.Methods;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 

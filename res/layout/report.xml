@@ -174,10 +174,12 @@
 		            android:layout_height="wrap_content">
 		            </TextView>
 		            
-            		<MultiAutoCompleteTextView 
-            		android:id="@+id/txtName" 
-            		android:layout_width="match_parent" 
-            		android:layout_height="wrap_content">
+            		<MultiAutoCompleteTextView
+            		    android:id="@+id/txtName"
+            		    android:layout_width="match_parent"
+            		    android:layout_height="wrap_content"
+            		    android:completionThreshold="1" >
+
             		</MultiAutoCompleteTextView>
 		            
 		            <TextView 
@@ -229,7 +231,7 @@
             android:id="@+id/tblBros" 
             android:layout_width="match_parent" 
             android:layout_height="wrap_content"
-            android:stretchColumns="1">
+            android:stretchColumns="*">
             
 				<TableRow 
 				android:id="@+id/tableRow1" 
