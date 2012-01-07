@@ -182,6 +182,15 @@ public class API extends Activity{
 			phoneCall.execute(phoneClient);
 			result = true;
 			break;
+		}
+		return result;
+	}
+	
+	public boolean callMethod(Methods method, AsyncRestRequestListener<Methods, JSONObject> callback, JSONObject json, String...params)
+	{
+		boolean result = false;
+		switch(method)
+		{
 		case serviceReport:
 			// set up a phone request
 			ApiCall reportCall = new ApiCall(context, callback, method, "Submitting Service Report", "Please Wait");
@@ -192,6 +201,7 @@ public class API extends Activity{
 			String reportTimestamp = Long.toString(Auth.getTimestamp());
 			
 			JSONObject reportUserData = new JSONObject();
+			
 			try {
 				reportUserData.put("date", params[0]);
 				reportUserData.put("projectName", params[1]);
@@ -202,13 +212,13 @@ public class API extends Activity{
 				reportUserData.put("travelTime", params[6]);
 				reportUserData.put("comments", params[7]);
 				reportUserData.put("numBros", params[8]);
-				reportUserData.put("brothers", params[9]);
+				reportUserData.put("brothers", json);
 			} catch (JSONException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			String reportUD = URLEncoder.encode(reportUserData.toString());
-			String reportData = "phone" + reportTimestamp + reportInstallID + reportUserData.toString();
+			String reportData = "serviceReport" + reportTimestamp + reportInstallID + reportUserData.toString();
 			reportClient.AddParam("method", "serviceReport");
 			reportClient.AddParam("installID", reportInstallID);
 			reportClient.AddParam("timestamp", reportTimestamp);

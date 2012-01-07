@@ -29,12 +29,12 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class Report extends Activity implements AsyncRestRequestListener<Methods, JSONObject>
+public class Report extends Activity implements AsyncRestRequestListener<Methods, JSONObject>, View.OnFocusChangeListener, RadioGroup.OnCheckedChangeListener, View.OnClickListener
 {
-	EditText txtProjName, txtProjLoc, txtTravelTime, txtHours, txtMinutes;
+	EditText txtProjName, txtProjLoc, txtTravelTime, txtHours, txtMinutes, txtComments;
 	DatePicker datePicker;
 	RadioGroup groupTypeService, groupTypeProject, groupOnOffCampus;
-	RadioButton radOn, radOff;
+	RadioButton radOn, radOff, radIn, radService1, radService2, radService3;
 	CheckBox chkDriver;
 	MultiAutoCompleteTextView txtName;
 	Button btnAdd, btnSubmit;
@@ -55,12 +55,17 @@ public class Report extends Activity implements AsyncRestRequestListener<Methods
 		txtTravelTime = (EditText)findViewById(R.id.txtTravelTime);
 		txtHours = (EditText)findViewById(R.id.txtHours);
 		txtMinutes = (EditText)findViewById(R.id.txtMinutes);
+		txtComments = (EditText)findViewById(R.id.txtComments);
 		datePicker = (DatePicker)findViewById(R.id.datePicker);
 		groupTypeService = (RadioGroup)findViewById(R.id.groupTypeService);
 		groupTypeProject = (RadioGroup)findViewById(R.id.groupTypeProject);
 		groupOnOffCampus = (RadioGroup)findViewById(R.id.groupOnOffCampus);
 		radOn = (RadioButton)findViewById(R.id.radioOn);
 		radOff = (RadioButton)findViewById(R.id.radioOff);
+		radIn = (RadioButton)findViewById(R.id.radioIn);
+		radService1 = (RadioButton)findViewById(R.id.radioService1);
+		radService2 = (RadioButton)findViewById(R.id.radioService2);
+		radService3 = (RadioButton)findViewById(R.id.radioService3);
 		chkDriver = (CheckBox)findViewById(R.id.chkDriver);
 		txtName = (MultiAutoCompleteTextView)findViewById(R.id.txtName);
 		btnAdd = (Button)findViewById(R.id.btnAdd);
@@ -69,10 +74,10 @@ public class Report extends Activity implements AsyncRestRequestListener<Methods
 		
 		txtTravelTime.setEnabled(false);
 		chkDriver.setChecked(false);
-		txtName.setOnFocusChangeListener(new FocusListener());
-		groupOnOffCampus.setOnCheckedChangeListener(new RadioListener());
-		btnAdd.setOnClickListener(new ClickListener(this));
-		btnSubmit.setOnClickListener(new ClickListener(this));
+		txtName.setOnFocusChangeListener(this);
+		groupOnOffCampus.setOnCheckedChangeListener(this);
+		btnAdd.setOnClickListener(this);
+		btnSubmit.setOnClickListener(this);
 		
 		if (database == null)
 		{
@@ -142,7 +147,7 @@ public class Report extends Activity implements AsyncRestRequestListener<Methods
 				driver.setText("No");
 			driver.setWidth((int)(display.getWidth()*.15));
 			remove.setText("X");
-			remove.setOnClickListener(new ClickListener(this));
+			remove.setOnClickListener(this);
 			remove.setWidth((int)(display.getWidth()*.15));
 			
 			row.addView(name);
@@ -184,269 +189,299 @@ public class Report extends Activity implements AsyncRestRequestListener<Methods
 	
 	public void onRestRequestComplete(Methods method, JSONObject result) 
 	{
-		// TODO Auto-generated method stub
-		
-	}
-
-    private class FocusListener implements View.OnFocusChangeListener 
-    {
-        public void onFocusChange(View v, boolean hasFocus) 
-        {
-            if (v.getId() == R.id.txtName && !hasFocus) 
-            {
-            	String text = ((AutoCompleteTextView)v).getText().toString();
-            	if (text.length() < 3) 		//specifies minimum length for a valid string, this is done because the substring in the following line cannot be done if the string is too short
-            	{
-            		((AutoCompleteTextView)v).setText("");
-            		return;
-            	}
-            	text = text.substring(0, text.length()-2);
-                if(isValid(text))
-                {
-                	((AutoCompleteTextView)v).setText(text);
-                }
-                else
-                	((AutoCompleteTextView)v).setText("");
-            }
-        }
-        
-        public boolean isValid(CharSequence text) 
-        {
-            Arrays.sort(users);
-            if (Arrays.binarySearch(users, text.toString()) > 0) 
-            {
-                return true;
-            }
-            return false;
-        }
-    }
-    
-    private class RadioListener implements RadioGroup.OnCheckedChangeListener
-    {
-		public void onCheckedChanged(RadioGroup group, int checkedId) 
+		if(method == Methods.serviceReport)
 		{
-			if(group.getId() == R.id.groupOnOffCampus)
+			if(result != null)
 			{
-				if(checkedId == radOn.getId())
-				{
-					txtTravelTime.setText("");
-					txtTravelTime.setEnabled(false);
-					chkDriver.setEnabled(false);
-				}
-				else if (checkedId == radOff.getId())
-				{
-					txtTravelTime.setText("0");
-					txtTravelTime.setEnabled(true);
-					chkDriver.setEnabled(true);
-				}
-			}
-		}
-    }
-    
-    private class ClickListener implements View.OnClickListener
-    {
-    	Context context;
-    	
-    	public ClickListener(Context c)
-    	{
-    		context = c;
-    	}
-    	
-    	public String getId(String brother)
-    	{
-    		int begin = brother.indexOf('[');
-    		int end = brother.indexOf(']');
-    		if (begin == -1 || end == -1)
-    			return null;
-    		else
-    			return brother.substring(begin+1, end);
-    	}
-    	
-    	public void loadBrothers()
-    	{
-    		layoutBrothers.removeAllViews();
-    		LinearLayout row;
-			TextView name;
-			TextView hours;
-			TextView minutes;
-			TextView driver;
-			Button remove;
-    		android.view.Display display = ((android.view.WindowManager)getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay(); 
-    		
-    		row = new LinearLayout(context);
-			name = new TextView(context);
-			hours = new TextView(context);
-			minutes = new TextView(context);
-			driver = new TextView(context);
-			TextView removeText = new TextView(context);
-			
-			name.setText("Name");
-			name.setWidth((int)(display.getWidth()*.4));
-			hours.setText("Hours");
-			hours.setWidth((int)(display.getWidth()*.15));
-			minutes.setText("Minutes");
-			minutes.setWidth((int)(display.getWidth()*.15));
-			driver.setText("Driver?");
-			driver.setWidth((int)(display.getWidth()*.15));
-			removeText.setText("Remove");
-			removeText.setWidth((int)(display.getWidth()*.15));
-			
-			row.addView(name);
-			row.addView(hours);
-			row.addView(minutes);
-			row.addView(driver);
-			row.addView(removeText);
-			
-			layoutBrothers.addView(row);
-    		
-    		for (int x = 0; x < brothers.size(); x++)
-    		{
-	    		row = new LinearLayout(context);
-				name = new TextView(context);
-				hours = new TextView(context);
-				minutes = new TextView(context);
-				driver = new TextView(context);
-				remove = new Button(context);
-				
-				name.setText(brothers.get(x).name);
-				name.setWidth((int)(display.getWidth()*.4));
-				hours.setText(brothers.get(x).hours+"");
-				hours.setWidth((int)(display.getWidth()*.15));
-				minutes.setText(brothers.get(x).minutes+"");
-				minutes.setWidth((int)(display.getWidth()*.15));
-				if (brothers.get(x).driver)
-					driver.setText("Yes");
-				else
-					driver.setText("No");
-				driver.setWidth((int)(display.getWidth()*.15));
-				remove.setText("X");
-				remove.setOnClickListener(new ClickListener(context));
-				remove.setWidth((int)(display.getWidth()*.15));
-				
-				row.addView(name);
-				row.addView(hours);
-				row.addView(minutes);
-				row.addView(driver);
-				row.addView(remove);
-				
-				layoutBrothers.addView(row);
-    		}
-    	}
-    	
-		public void onClick(View v) 
-		{
-			if (v.getId() == R.id.btnAdd)
-			{
-				txtMinutes.requestFocus();
-				if (txtName.getText().toString().compareTo("")==0)
-				{
-					Toast.makeText(context, "No name inserted.", Toast.LENGTH_SHORT).show();
-					return;
-				}
-				else if((Integer.parseInt(txtHours.getText().toString())==0) && (Integer.parseInt(txtMinutes.getText().toString())==0))
-				{
-					Toast.makeText(context, "Time must be greater than 0 minutes.", Toast.LENGTH_SHORT).show();
-					return;
-				}
-				String brother = getId(txtName.getText().toString());
-				if (brother == null)
-				{
-					Toast.makeText(context, "Invalid name entered.", Toast.LENGTH_SHORT).show();
-					return;
-				}
-				
-				boolean driver;
-				if (chkDriver.isChecked())
-					driver=true;
-				else
-					driver=false;
-				Brother bro = new Brother(txtName.getText().toString(), getId(txtName.getText().toString()), Integer.parseInt(txtHours.getText().toString()), Integer.parseInt(txtMinutes.getText().toString()), driver);
-				brothers.add(bro);
-				
-				loadBrothers();
-			}
-			else if (v.getId() == R.id.btnSubmit)
-			{
-				if (txtProjName.getText().toString().compareTo("") == 0)
-				{
-					Toast.makeText(context, "Project Name cannot be empty.", Toast.LENGTH_SHORT).show();
-					return;
-				}
-				else if (txtProjLoc.getText().toString().compareTo("") == 0)
-				{
-					Toast.makeText(context, "Project Location cannot be empty.", Toast.LENGTH_SHORT).show();
-					return;
-				}
-				else if (brothers.size() == 0)
-				{
-					Toast.makeText(context, "No brothers in service report.", Toast.LENGTH_SHORT).show();
-					return;
-				}
-				try 
-				{
-					JSONObject json = new JSONObject();
-					
-					for (int x = 0; x < brothers.size(); x++)
+				try {
+					String requestStatus = result.getString("requestStatus");
+					if(requestStatus.compareTo("success") == 0)
 					{
-						JSONObject jsonBro = new JSONObject();
-						jsonBro.put("uid", brothers.get(x).id);
-						jsonBro.put("hrs", brothers.get(x).hours);
-						jsonBro.put("min", brothers.get(x).minutes);
-						if (brothers.get(x).driver)
-							jsonBro.put("driver", 1);
-						else
-							jsonBro.put("driver", 0);
-						
-						jsonBro.put("min", brothers.get(x).minutes);
-						if (brothers.get(x).driver)
-							jsonBro.put("driver", 1);
-						else
-							jsonBro.put("driver", 0);
-						json.put(x+"", jsonBro.toString());
+						Toast msg = Toast.makeText(getApplicationContext(), "Service Report successfully submitted!", Toast.LENGTH_LONG);
+						msg.show();
+						finish();
 					}
-					//still need to create the string array to send to the API callMethod
-					
-					/*
-					API api = new API(context);
-					if(!api.callMethod(Methods.serviceReport, context, (String[])null))
+					else if(requestStatus.compareTo("timestamp invalid") == 0)
 					{
-						Toast msg = Toast.makeText(getApplicationContext(), "Error: Calling getContract", Toast.LENGTH_LONG);
+						Toast msg = Toast.makeText(getApplicationContext(), "Invalid timestamp.  Please try again.", Toast.LENGTH_LONG);
 						msg.show();
 					}
-					*/
-				} 
-				catch (JSONException e) 
-				{
+					else if(requestStatus.compareTo("HMAC invalid") == 0)
+					{
+						Toast msg = Toast.makeText(getApplicationContext(), "You have been logged out by the server.  Please log in again.", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else if(requestStatus.compareTo("invalid date") == 0)
+					{
+						Toast msg = Toast.makeText(getApplicationContext(), "Invalid date entered.  Please contact webmaster if problem persists", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else if(requestStatus.compareTo("missing project name") == 0)
+					{
+						Toast msg = Toast.makeText(getApplicationContext(), "Missing project name.  Please contact webmaster if problem persists", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else if(requestStatus.compareTo("missing location") == 0)
+					{
+						Toast msg = Toast.makeText(getApplicationContext(), "Missing project location.  Please contact webmaster if problem persists", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else if(requestStatus.compareTo("inside or outside") == 0)
+					{
+						Toast msg = Toast.makeText(getApplicationContext(), "Missing inside or outside project information.  Please contact webmaster if problem persists", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else if(requestStatus.compareTo("on or off campus") == 0)
+					{
+						Toast msg = Toast.makeText(getApplicationContext(), "Mission on or off campus information.  Please contact webmaster if problem persists", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else if(requestStatus.compareTo("missing service type") == 0)
+					{
+						Toast msg = Toast.makeText(getApplicationContext(), "Missing service type information.  Please contact webmaster if problem persists", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else if(requestStatus.compareTo("no brothers added") == 0)
+					{
+						Toast msg = Toast.makeText(getApplicationContext(), "No brothers added to service report.  Please contact webmaster if problem persists", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else if(requestStatus.compareTo("missing travel time") == 0)
+					{
+						Toast msg = Toast.makeText(getApplicationContext(), "Missing Travel Time.  Please contact webmaster if problem persists", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else if(requestStatus.compareTo("invalid date") == 0)
+					{
+						Toast msg = Toast.makeText(getApplicationContext(), "Invalid date entered.  Please contact webmaster if problem persists", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else
+					{
+						Toast msg = Toast.makeText(getApplicationContext(), "Invalid requestStatus", Toast.LENGTH_LONG);
+						msg.show();
+					}
+				} catch (JSONException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
 			else
 			{
-				Button remove = (Button)v;
-				if (remove.getText().toString().compareTo("X")!=0)
-					return;
-				LinearLayout row = (LinearLayout) remove.getParent();
-				int count = layoutBrothers.getChildCount();
-				int match = -1;
-				for (int x = 1; x <= count; x++)						//start with index 1 because index 0 is the header
-				{
-					if(layoutBrothers.getChildAt(x) == row)
-					{
-						match = x;
-						break;
-					}
-				}
-				if (match == -1)										//no match occurred, this should never happen but if it does, it just returns to exit the method
-					return;
-				else
-				{
-					brothers.remove(match-1);							//'-1' accounts for the header throwing off the indices
-					loadBrothers();
-				}
+				Toast msg = Toast.makeText(getApplicationContext(), "No feedback recieved from server.  Please contact webmaster if problem persists", Toast.LENGTH_LONG);
+				msg.show();
+				finish();
 			}
 		}
+		
+	}
+
+	public void onFocusChange(View v, boolean hasFocus) 
+    {
+        if (v.getId() == R.id.txtName && !hasFocus) 
+        {
+        	String text = ((AutoCompleteTextView)v).getText().toString();
+        	if (text.length() < 3) 		//specifies minimum length for a valid string, this is done because the substring in the following line cannot be done if the string is too short
+        	{
+        		((AutoCompleteTextView)v).setText("");
+        		return;
+        	}
+        	text = text.substring(0, text.length()-2);
+            if(isValid(text))
+            {
+            	((AutoCompleteTextView)v).setText(text);
+            }
+            else
+            	((AutoCompleteTextView)v).setText("");
+        }
     }
+    
+    public boolean isValid(CharSequence text) 
+    {
+        Arrays.sort(users);
+        if (Arrays.binarySearch(users, text.toString()) > 0) 
+        {
+            return true;
+        }
+        return false;
+    }
+    
+    public void onCheckedChanged(RadioGroup group, int checkedId) 
+	{
+		if(group.getId() == R.id.groupOnOffCampus)
+		{
+			if(checkedId == radOn.getId())
+			{
+				txtTravelTime.setText("");
+				txtTravelTime.setEnabled(false);
+				chkDriver.setEnabled(false);
+			}
+			else if (checkedId == radOff.getId())
+			{
+				txtTravelTime.setText("0");
+				txtTravelTime.setEnabled(true);
+				chkDriver.setEnabled(true);
+			}
+		}
+	}
+
+    public String getId(String brother)
+	{
+		int begin = brother.indexOf('[');
+		int end = brother.indexOf(']');
+		if (begin == -1 || end == -1)
+			return null;
+		else
+			return brother.substring(begin+1, end);
+	}
+	
+	public void onClick(View v) 
+	{
+		if (v.getId() == R.id.btnAdd)
+		{
+			txtMinutes.requestFocus();
+			if (txtName.getText().toString().compareTo("")==0)
+			{
+				Toast.makeText(this, "No name inserted.", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			else if((Integer.parseInt(txtHours.getText().toString())==0) && (Integer.parseInt(txtMinutes.getText().toString())==0))
+			{
+				Toast.makeText(this, "Time must be greater than 0 minutes.", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			String brother = getId(txtName.getText().toString());
+			if (brother == null)
+			{
+				Toast.makeText(this, "Invalid name entered.", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			
+			boolean driver;
+			if (chkDriver.isChecked())
+				driver=true;
+			else
+				driver=false;
+			Brother bro = new Brother(txtName.getText().toString(), getId(txtName.getText().toString()), Integer.parseInt(txtHours.getText().toString()), Integer.parseInt(txtMinutes.getText().toString()), driver);
+			brothers.add(bro);
+			
+			loadBrothers();
+		}
+		else if (v.getId() == R.id.btnSubmit)
+		{
+			if (txtProjName.getText().toString().compareTo("") == 0)
+			{
+				Toast.makeText(this, "Project Name cannot be empty.", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			else if (txtProjLoc.getText().toString().compareTo("") == 0)
+			{
+				Toast.makeText(this, "Project Location cannot be empty.", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			else if (brothers.size() == 0)
+			{
+				Toast.makeText(this, "No brothers in service report.", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			try 
+			{
+				JSONObject json = new JSONObject();
+				
+				for (int x = 0; x < brothers.size(); x++)
+				{
+					JSONObject jsonBro = new JSONObject();
+					jsonBro.put("uid", brothers.get(x).id);
+					jsonBro.put("hrs", brothers.get(x).hours);
+					jsonBro.put("min", brothers.get(x).minutes);
+					if (brothers.get(x).driver)
+						jsonBro.put("driver", 1);
+					else
+						jsonBro.put("driver", 0);
+					
+					jsonBro.put("min", brothers.get(x).minutes);
+					if (brothers.get(x).driver)
+						jsonBro.put("driver", 1);
+					else
+						jsonBro.put("driver", 0);
+					json.put(x+"", jsonBro);
+				}
+				
+				String[] params = new String[9];
+				
+				String month, day;
+				if (datePicker.getMonth() < 10)
+					month = "0" + datePicker.getMonth();
+				else
+					month = "" + datePicker.getMonth();
+				if (datePicker.getDayOfMonth() < 10)
+					day = "0" + datePicker.getDayOfMonth();
+				else
+					day = "" + datePicker.getDayOfMonth();
+				params[0] = datePicker.getYear() + "-" + month + "-" + day;
+				params[1] = txtProjName.getText().toString();
+				params[2] = txtProjLoc.getText().toString();
+				if (radIn.isChecked())
+					params[3] = "in";
+				else
+					params[3] = "out";
+				if (radOn.isChecked())
+					params[4] = "on";
+				else
+					params[4] = "off";
+				if (radService1.isChecked())
+					params[5] = "0";
+				else if (radService2.isChecked())
+					params[5] = "1";
+				else if (radService3.isChecked())
+					params[5] = "2";
+				else
+					params[5] = "3";
+				if (txtTravelTime.getText().toString().compareTo("") == 0)
+					params[6] = "0";
+				else
+					params[6] = "" + Integer.parseInt(txtTravelTime.getText().toString());
+				params[7] = txtComments.getText().toString();
+				params[8] = "" + brothers.size();
+				
+				API api = new API(this);
+				if(!api.callMethod(Methods.serviceReport, this, json, params))
+				{
+					Toast msg = Toast.makeText(getApplicationContext(), "Error: Calling getContract", Toast.LENGTH_LONG);
+					msg.show();
+				}
+			} 
+			catch (JSONException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else
+		{
+			Button remove = (Button)v;
+			if (remove.getText().toString().compareTo("X")!=0)
+				return;
+			LinearLayout row = (LinearLayout) remove.getParent();
+			int count = layoutBrothers.getChildCount();
+			int match = -1;
+			for (int x = 1; x <= count; x++)						//start with index 1 because index 0 is the header
+			{
+				if(layoutBrothers.getChildAt(x) == row)
+				{
+					match = x;
+					break;
+				}
+			}
+			if (match == -1)										//no match occurred, this should never happen but if it does, it just returns to exit the method
+				return;
+			else
+			{
+				brothers.remove(match-1);							//'-1' accounts for the header throwing off the indices
+				loadBrothers();
+			}
+		}
+	}
     
     private class Brother
     {

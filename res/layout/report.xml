@@ -95,26 +95,26 @@
             android:layout_height="wrap_content">
                 <RadioButton 
                 	android:layout_width="wrap_content" 
-                	android:id="@+id/radio1" 
+                	android:id="@+id/radioService1" 
                 	android:layout_height="wrap_content" 
                 	android:text="Service to Chapter" 
                 	android:checked="true">
                 </RadioButton>
                 <RadioButton 
                 	android:layout_width="wrap_content" 
-                	android:id="@+id/radio2" 
+                	android:id="@+id/radioService2" 
                 	android:layout_height="wrap_content" 
                 	android:text="Service to Campus">
                 </RadioButton>
                  <RadioButton 
                 	android:layout_width="wrap_content" 
-                	android:id="@+id/radio3" 
+                	android:id="@+id/radioService3" 
                 	android:layout_height="wrap_content" 
                 	android:text="Service to Community">
                 </RadioButton>
                 <RadioButton 
                 	android:layout_width="wrap_content" 
-                	android:id="@+id/radio4" 
+                	android:id="@+id/radioService4" 
                 	android:layout_height="wrap_content" 
                 	android:text="Service to Country">
                 </RadioButton>
@@ -159,6 +159,18 @@
         	android:layout_height="wrap_content"
             android:inputType="number">
         	</EditText>
+
+            <TextView
+            android:id="@+id/textView17"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Comments:" />
+
+            <EditText
+            android:id="@+id/txtComments"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine" />
             
             <TextView 
             android:text="Please enter each brother/pledge below:" 
