@@ -28,6 +28,7 @@ import edu.cwru.apo.API.Methods;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
@@ -155,22 +156,29 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 					String requestStatus = result.getString("requestStatus");
 					if(requestStatus.compareTo("success") == 0)
 					{
+						SharedPreferences.Editor editor = getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE).edit();
+						editor.putLong("updateTime", result.getLong("updateTime"));
+						editor.commit();
 						int numbros = result.getInt("numBros");
-						JSONArray caseID = result.getJSONArray("caseID");
-						JSONArray first = result.getJSONArray("first");
-						JSONArray last = result.getJSONArray("last");
-						JSONArray phone = result.getJSONArray("phone");
-						JSONArray family = result.getJSONArray("family");
-						ContentValues values;
-						for(int i = 0; i < numbros; i++)
+						
+						if (numbros > 0)
 						{
-							values = new ContentValues();
-							values.put("_id", caseID.getString(i));
-							values.put("first", first.getString(i));
-							values.put("last", last.getString(i));
-							values.put("phone", phone.getString(i));
-							values.put("family", family.getString(i));
-							database.replace("phoneDB", null, values);
+							JSONArray caseID = result.getJSONArray("caseID");
+							JSONArray first = result.getJSONArray("first");
+							JSONArray last = result.getJSONArray("last");
+							JSONArray phone = result.getJSONArray("phone");
+							JSONArray family = result.getJSONArray("family");
+							ContentValues values;
+							for(int i = 0; i < numbros; i++)
+							{
+								values = new ContentValues();
+								values.put("_id", caseID.getString(i));
+								values.put("first", first.getString(i));
+								values.put("last", last.getString(i));
+								values.put("phone", phone.getString(i));
+								values.put("family", family.getString(i));
+								database.replace("phoneDB", null, values);
+							}
 						}
 						Intent homeIntent = new Intent(Login.this, Home.class);
 						Login.this.startActivity(homeIntent);

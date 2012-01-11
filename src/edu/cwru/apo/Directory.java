@@ -31,6 +31,7 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -188,6 +189,9 @@ public class Directory extends Activity implements OnClickListener, AsyncRestReq
 					String requestStatus = result.getString("requestStatus");
 					if(requestStatus.compareTo("success") == 0)
 					{
+						SharedPreferences.Editor editor = getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE).edit();
+						editor.putLong("updateTime", result.getLong("updateTime"));
+						editor.commit();
 						int numbros = result.getInt("numBros");
 						JSONArray caseID = result.getJSONArray("caseID");
 						JSONArray first = result.getJSONArray("first");

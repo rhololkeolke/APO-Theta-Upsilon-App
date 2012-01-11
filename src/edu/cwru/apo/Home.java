@@ -19,17 +19,33 @@
 
 package edu.cwru.apo;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import edu.cwru.apo.API.Methods;
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.TableLayout;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
 
 
 //This is the main window of the application.  Every sub activity gets launched from here
-public class Home extends Activity implements OnItemClickListener{
+public class Home extends Activity implements OnItemClickListener, AsyncRestRequestListener<Methods, JSONObject>{
+	
+	private static PhoneOpenHelper phoneDB;
+	private static SQLiteDatabase database = null;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -41,6 +57,35 @@ public class Home extends Activity implements OnItemClickListener{
 		
 		gridview.setOnItemClickListener(this);
 		
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    MenuInflater inflater = getMenuInflater();
+	    inflater.inflate(R.menu.option_menu, menu);
+	    return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+	    switch (item.getItemId()) {
+	    case R.id.updateMenuItem:
+	    	if (phoneDB == null)
+	    		phoneDB = new PhoneOpenHelper(this);
+	    	if (database == null)
+	    		database = phoneDB.getWritableDatabase();
+	    	API api = new API(this);
+	    	String[] params = {"0"};
+			if(!api.callMethod(Methods.phone, this, params))
+			{
+				Toast msg = Toast.makeText(this, "Error: Calling phone", Toast.LENGTH_LONG);
+				msg.show();
+			}
+	        return true;
+	    default:
+	        return super.onOptionsItemSelected(item);
+	    }
 	}
 
 	public void onItemClick(AdapterView<?> parent, View view, int position,
@@ -87,4 +132,57 @@ public class Home extends Activity implements OnItemClickListener{
 		Auth.saveKeys(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE));
 	}
 
+	public void onRestRequestComplete(Methods method, JSONObject result) 
+	{
+		if(method == Methods.phone)
+		{
+			if(result != null)
+			{
+				try {
+					String requestStatus = result.getString("requestStatus");
+					if(requestStatus.compareTo("success") == 0)
+					{
+						SharedPreferences.Editor editor = getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE).edit();
+						editor.putLong("updateTime", result.getLong("updateTime"));
+						editor.commit();
+						int numbros = result.getInt("numBros");
+						JSONArray caseID = result.getJSONArray("caseID");
+						JSONArray first = result.getJSONArray("first");
+						JSONArray last = result.getJSONArray("last");
+						JSONArray phone = result.getJSONArray("phone");
+						JSONArray family = result.getJSONArray("family");
+						ContentValues values;
+						for(int i = 0; i < numbros; i++)
+						{
+							values = new ContentValues();
+							values.put("_id", caseID.getString(i));
+							values.put("first", first.getString(i));
+							values.put("last", last.getString(i));
+							values.put("phone", phone.getString(i));
+							values.put("family", family.getString(i));
+							database.replace("phoneDB", null, values);
+						}
+					}
+					else if(requestStatus.compareTo("timestamp invalid") == 0)
+					{
+						Toast msg = Toast.makeText(this, "Invalid timestamp.  Please try again.", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else if(requestStatus.compareTo("HMAC invalid") == 0)
+					{
+						Toast msg = Toast.makeText(this, "You have been logged out by the server.  Please log in again.", Toast.LENGTH_LONG);
+						msg.show();
+					}
+					else
+					{
+						Toast msg = Toast.makeText(this, "Invalid requestStatus", Toast.LENGTH_LONG);
+						msg.show();
+					}
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}	
+		}
+	}
 }

@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import edu.cwru.apo.API.Methods;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.widget.Toast;
@@ -59,6 +60,9 @@ public class PhoneOpenHelper extends SQLiteOpenHelper implements AsyncRestReques
 					String requestStatus = result.getString("requestStatus");
 					if(requestStatus.compareTo("success") == 0)
 					{
+						SharedPreferences.Editor editor = context.getSharedPreferences(APO.PREF_FILE_NAME, 0).edit();
+						editor.putLong("updateTime", result.getLong("updateTime"));
+						editor.commit();
 						int numbros = result.getInt("numBros");
 						JSONArray caseID = result.getJSONArray("caseID");
 						JSONArray first = result.getJSONArray("first");

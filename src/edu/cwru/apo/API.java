@@ -154,28 +154,28 @@ public class API extends Activity{
 			
 			JSONObject phoneUserData = new JSONObject();
 			try {
-				//phoneUserData.put("updateTime", getUpdateTime(getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE)));
-				phoneUserData.put("updateTime", "0");
+				if (params != null)
+					phoneUserData.put("updateTime", Long.parseLong(params[0]));
+				else
+					phoneUserData.put("updateTime", getUpdateTime(context.getSharedPreferences(APO.PREF_FILE_NAME, MODE_PRIVATE)));
+				
+				String phoneUD = URLEncoder.encode(phoneUserData.toString());
+				String phoneData = "phone" + phoneTimestamp + phoneInstallID + phoneUserData.toString();
+				phoneClient.AddParam("method", "phone");
+				phoneClient.AddParam("installID", phoneInstallID);
+				phoneClient.AddParam("timestamp", phoneTimestamp);
+				phoneClient.AddParam("userData", phoneUD);
+				
+				phoneClient.AddParam("HMAC", Auth.Hmac.generate(phoneData).toString());
 			} catch (JSONException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
-			}
-			String phoneUD = URLEncoder.encode(phoneUserData.toString());
-			String phoneData = "phone" + phoneTimestamp + phoneInstallID + phoneUserData.toString();
-			phoneClient.AddParam("method", "phone");
-			phoneClient.AddParam("installID", phoneInstallID);
-			phoneClient.AddParam("timestamp", phoneTimestamp);
-			phoneClient.AddParam("userData", phoneUD);
-			try {
-				phoneClient.AddParam("HMAC", Auth.Hmac.generate(phoneData).toString());
 			} catch (InvalidKeyException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				return false;
 			} catch (NoSuchAlgorithmException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				return false;
 			}
 			
 			//execute the call
