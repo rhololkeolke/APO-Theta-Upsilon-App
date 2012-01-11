@@ -101,12 +101,14 @@ public class Home extends Activity implements OnItemClickListener, AsyncRestRequ
 			Intent contractIntent = new Intent(Home.this, Contract.class);
 			Home.this.startActivity(contractIntent);
 			break;
+		/*
 		case 2:
 			// launch profile activity
 			Intent profileIntent = new Intent(Home.this, Profile.class);
 			Home.this.startActivity(profileIntent);
 			break;
-		case 3:
+		*/
+		case 2:
 			// launch directory activity
 			Intent directoryIntent = new Intent(Home.this, Directory.class);
 			Home.this.startActivity(directoryIntent);

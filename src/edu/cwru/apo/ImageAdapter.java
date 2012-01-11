@@ -68,7 +68,6 @@ public class ImageAdapter extends BaseAdapter {
 	private Integer[] mThumbIds = {
 			R.drawable.report,
 			R.drawable.contract,
-			R.drawable.profile,
 			R.drawable.directory
 	};
 
