@@ -75,12 +75,11 @@ public class Directory extends Activity implements OnClickListener, AsyncRestReq
 			loadTable();
 	}
 	
-	
 	private void loadTable()
 	{
 		ProgressDialog progDialog = ProgressDialog.show(this, "Loading", "Please Wait", false);
 		userTable.removeAllViews();
-		Cursor results = database.query("phoneDB", new String[] {"first","last","_id"}, null, null, null, null, "first");
+		Cursor results = database.query("phoneDB", new String[] {"first","last","_id","phone"}, null, null, null, null, "first");
 		String rowText = "";
 		TableRow row;
 		TextView text;
@@ -88,16 +87,20 @@ public class Directory extends Activity implements OnClickListener, AsyncRestReq
 			return;
 		while (!results.isAfterLast())
 		{
-			rowText = results.getString(0) + " " + results.getString(1) + " [" + results.getString(2) + "]";
-			row = new TableRow(this);
-			text = new TextView(this);
-			row.setPadding(0, 5, 0, 5);
-			text.setClickable(true);
-			text.setOnClickListener(this);
-			//text.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-			text.setText(rowText);
-			userTable.addView(row);
-			row.addView(text);
+			String phoneNumber = removeNonDigits(results.getString(3));
+			if (!(phoneNumber == null || phoneNumber.trim().equals("") || phoneNumber.trim().equals("null")))
+			{
+				rowText = results.getString(0) + " " + results.getString(1) + " [" + results.getString(2) + "]";
+				row = new TableRow(this);
+				text = new TextView(this);
+				row.setPadding(0, 5, 0, 5);
+				text.setClickable(true);
+				text.setOnClickListener(this);
+				//text.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+				text.setText(rowText);
+				userTable.addView(row);
+				row.addView(text);
+			}
 			results.moveToNext();
 		}
 		progDialog.cancel();
