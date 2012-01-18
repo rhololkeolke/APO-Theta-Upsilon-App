@@ -60,6 +60,20 @@ public class Home extends Activity implements OnItemClickListener, AsyncRestRequ
 	}
 	
 	@Override
+	public void onResume()
+	{
+		super.onResume();
+		if (!Auth.loggedIn)
+		{
+			Intent nextActivity = new Intent(Home.this, Login.class);
+			Bundle extras = new Bundle();
+			nextActivity.putExtras(extras);
+			Home.this.startActivity(nextActivity);
+			finish();
+		}
+	}
+	
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    MenuInflater inflater = getMenuInflater();
 	    inflater.inflate(R.menu.option_menu, menu);
@@ -172,8 +186,10 @@ public class Home extends Activity implements OnItemClickListener, AsyncRestRequ
 					}
 					else if(requestStatus.compareTo("HMAC invalid") == 0)
 					{
+						Auth.loggedIn = false;
 						Toast msg = Toast.makeText(this, "You have been logged out by the server.  Please log in again.", Toast.LENGTH_LONG);
 						msg.show();
+						finish();
 					}
 					else
 					{

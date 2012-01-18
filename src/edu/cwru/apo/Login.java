@@ -104,6 +104,7 @@ public class Login extends Activity implements OnClickListener, AsyncRestRequest
 					String requestStatus = result.getString("requestStatus");
 					if(requestStatus.compareTo("valid login") == 0)
 					{
+						Auth.loggedIn = true;
 						Auth.Hmac.setCounter(result.getInt("counter"));
 						Auth.Hmac.setIncrement(result.getInt("increment"));
 						PhoneOpenHelper db = new PhoneOpenHelper(this);

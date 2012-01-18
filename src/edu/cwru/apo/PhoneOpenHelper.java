@@ -88,6 +88,7 @@ public class PhoneOpenHelper extends SQLiteOpenHelper implements AsyncRestReques
 					}
 					else if(requestStatus.compareTo("HMAC invalid") == 0)
 					{
+						Auth.loggedIn = false;
 						Toast msg = Toast.makeText(context, "You have been logged out by the server.  Please log in again.", Toast.LENGTH_LONG);
 						msg.show();
 					}

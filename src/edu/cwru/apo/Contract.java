@@ -79,8 +79,10 @@ public class Contract extends Activity implements AsyncRestRequestListener<Metho
 					}
 					else if(requestStatus.compareTo("HMAC invalid") == 0)
 					{
+						Auth.loggedIn = false;
 						Toast msg = Toast.makeText(getApplicationContext(), "You have been logged out by the server.  Please log in again.", Toast.LENGTH_LONG);
 						msg.show();
+						finish();
 					}
 					else if(requestStatus.compareTo("no contract") == 0)
 					{

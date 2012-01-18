@@ -60,6 +60,7 @@ public class Auth{
 	
 	private static int counter = 0;
 	private static byte[] sharedSecret = null;
+	public static boolean loggedIn;
 	public static DynamicHmac Hmac = new DynamicHmac();
 	
 	// returns the number of milliseconds since 1970

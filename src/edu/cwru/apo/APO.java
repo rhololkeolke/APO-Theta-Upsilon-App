@@ -88,6 +88,7 @@ public class APO extends Activity implements AsyncRestRequestListener<API.Method
 					if(result.getString("requestStatus").compareTo("valid") == 0)
 					{
 						//change the nextActivity to Home
+						Auth.loggedIn = true;
 						nextActivity = new Intent(APO.this, Home.class);
 					}
 					else if(result.getString("requestStatus").compareTo("No response") == 0)

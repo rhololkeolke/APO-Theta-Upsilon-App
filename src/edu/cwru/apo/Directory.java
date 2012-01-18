@@ -221,8 +221,10 @@ public class Directory extends Activity implements OnClickListener, AsyncRestReq
 					}
 					else if(requestStatus.compareTo("HMAC invalid") == 0)
 					{
+						Auth.loggedIn = false;
 						Toast msg = Toast.makeText(this, "You have been logged out by the server.  Please log in again.", Toast.LENGTH_LONG);
 						msg.show();
+						finish();
 					}
 					else
 					{
