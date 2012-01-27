@@ -443,7 +443,7 @@ public class Report extends Activity implements AsyncRestRequestListener<Methods
 					params[6] = "0";
 				else
 					params[6] = "" + Integer.parseInt(txtTravelTime.getText().toString());
-				params[7] = txtComments.getText().toString();
+				params[7] = txtComments.getText().toString() + " - Submitted by app";
 				params[8] = "" + brothers.size();
 				
 				API api = new API(this);
