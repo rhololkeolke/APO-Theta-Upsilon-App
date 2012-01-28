@@ -45,7 +45,7 @@ public class API extends Activity{
 	
 	private Context context;
 	
-	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport, checkAES, decryptRSA, users};
+	public enum Methods {login, checkCredentials, logout, resetPassword, getContract, phone, serviceReport, checkAES, decryptRSA, users, checkAppVersion};
 	
 	public API(Context context)
 	{
@@ -61,6 +61,15 @@ public class API extends Activity{
 		boolean result = false;
 		switch(method)
 		{
+		case checkAppVersion:
+			ApiCall checkVersionCall = new ApiCall(context, callback, method, "Checking for updates", "Please Wait");
+			RestClient checkVersionClient = new RestClient(secureUrl, httpClient, RequestMethod.POST);
+			checkVersionClient.AddParam("method", "appVersion");
+			
+			//execute the call
+			checkVersionCall.execute(checkVersionClient);
+			result = true;
+			break;
 		case login:
 			if(params.length != 2)
 				break;

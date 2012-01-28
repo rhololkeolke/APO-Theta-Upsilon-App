@@ -19,17 +19,25 @@
 
 package edu.cwru.apo;
 
+import java.io.File;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.cwru.apo.API.Methods;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -89,14 +97,21 @@ public class Home extends Activity implements OnItemClickListener, AsyncRestRequ
 	    		phoneDB = new PhoneOpenHelper(this);
 	    	if (database == null)
 	    		database = phoneDB.getWritableDatabase();
-	    	API api = new API(this);
+	    	API phoneApi = new API(this);
 	    	String[] params = {"0"};
-			if(!api.callMethod(Methods.phone, this, params))
+			if(!phoneApi.callMethod(Methods.phone, this, params))
 			{
 				Toast msg = Toast.makeText(this, "Error: Calling phone", Toast.LENGTH_LONG);
 				msg.show();
 			}
 	        return true;
+	    case R.id.updateApp:
+	    	API updateAppApi = new API(this);
+	    	if(!updateAppApi.callMethod(Methods.checkAppVersion, this))
+	    	{
+	    		Toast msg = Toast.makeText(this,"Error: Couldn't get app version", Toast.LENGTH_LONG);
+	    		msg.show();
+	    	}
 	    default:
 	        return super.onOptionsItemSelected(item);
 	    }
@@ -201,6 +216,57 @@ public class Home extends Activity implements OnItemClickListener, AsyncRestRequ
 					e.printStackTrace();
 				}
 			}	
+		}
+		else if(method == Methods.checkAppVersion)
+		{
+			if(result != null)
+			{
+				try{
+					String requestStatus = result.getString("requestStatus");
+					if(requestStatus.compareTo("success") == 0)
+					{
+						String appVersion = result.getString("version");
+						String appDate = result.getString("date");
+						final String appUrl = result.getString("url");
+						PackageInfo pinfo = this.getPackageManager().getPackageInfo(getPackageName(), 0);;
+						if(appVersion.compareTo(pinfo.versionName) != 0)
+						{
+							AlertDialog.Builder builder = new AlertDialog.Builder(this);
+							builder.setTitle("Upgrade");
+							builder.setMessage("Update available, ready to upgrade?");
+							builder.setIcon(R.drawable.icon);
+							builder.setCancelable(false);
+							builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog, int which) {
+									Intent download = new Intent("android.intent.action.VIEW",Uri.parse("http://apo.case.edu/app/" + appUrl)); 
+									startActivity(download);
+									Intent install = new Intent(Intent.ACTION_VIEW);
+									install.setDataAndType(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/download/" + appUrl)), "application/vnd.android.package-archive");
+									startActivity(install);  
+								}
+							});
+							builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog, int which) {
+									dialog.cancel();
+								}
+							});
+							AlertDialog alert = builder.create();
+							alert.show();
+						}
+						else
+						{
+							Toast msg = Toast.makeText(this, "No updates found", Toast.LENGTH_LONG);
+							msg.show();
+						}
+					}
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (NameNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 }
