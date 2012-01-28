@@ -412,10 +412,10 @@ public class Report extends Activity implements AsyncRestRequestListener<Methods
 				String[] params = new String[9];
 				
 				String month, day;
-				if (datePicker.getMonth() < 10)
-					month = "0" + datePicker.getMonth();
+				if (datePicker.getMonth() < 9)
+					month = "0" + (datePicker.getMonth()+1);
 				else
-					month = "" + datePicker.getMonth();
+					month = "" + (datePicker.getMonth()+1);
 				if (datePicker.getDayOfMonth() < 10)
 					day = "0" + datePicker.getDayOfMonth();
 				else
@@ -443,7 +443,7 @@ public class Report extends Activity implements AsyncRestRequestListener<Methods
 					params[6] = "0";
 				else
 					params[6] = "" + Integer.parseInt(txtTravelTime.getText().toString());
-				params[7] = txtComments.getText().toString();
+				params[7] = txtComments.getText().toString() + " - Submitted by app";
 				params[8] = "" + brothers.size();
 				
 				API api = new API(this);
