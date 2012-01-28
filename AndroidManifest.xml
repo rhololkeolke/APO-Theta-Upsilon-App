@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="edu.cwru.apo"
       android:versionCode="1"
-      android:versionName="1.0.0">
+      android:versionName="1b.1.0">
     <uses-sdk android:minSdkVersion="8" />
     <uses-permission android:name="android.permission.INTERNET"></uses-permission>
     <uses-permission android:name="android.permission.CALL_PHONE"></uses-permission>

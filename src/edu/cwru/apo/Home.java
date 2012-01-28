@@ -238,8 +238,11 @@ public class Home extends Activity implements OnItemClickListener, AsyncRestRequ
 							builder.setCancelable(false);
 							builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 								public void onClick(DialogInterface dialog, int which) {
-									Intent promptInstall = new Intent("android.intent.action.VIEW",Uri.parse("https://apo.case.edu:8090/app/" + appUrl)); 
-									startActivity(promptInstall);
+									Intent download = new Intent("android.intent.action.VIEW",Uri.parse("http://apo.case.edu/app/" + appUrl)); 
+									startActivity(download);
+									Intent install = new Intent(Intent.ACTION_VIEW);
+									install.setDataAndType(Uri.fromFile(new File(Environment.getExternalStorageDirectory() + "/download/" + appUrl)), "application/vnd.android.package-archive");
+									startActivity(install);  
 								}
 							});
 							builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
