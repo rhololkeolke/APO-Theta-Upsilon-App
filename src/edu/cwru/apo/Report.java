@@ -412,10 +412,10 @@ public class Report extends Activity implements AsyncRestRequestListener<Methods
 				String[] params = new String[9];
 				
 				String month, day;
-				if (datePicker.getMonth() < 10)
-					month = "0" + datePicker.getMonth();
+				if (datePicker.getMonth() < 9)
+					month = "0" + (datePicker.getMonth()+1);
 				else
-					month = "" + datePicker.getMonth();
+					month = "" + (datePicker.getMonth()+1);
 				if (datePicker.getDayOfMonth() < 10)
 					day = "0" + datePicker.getDayOfMonth();
 				else
