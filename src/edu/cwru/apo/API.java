@@ -41,7 +41,7 @@ import android.os.AsyncTask;
 public class API extends Activity{
 	
 	private static HttpClient httpClient = null;
-	private static String secureUrl = "https://apo.case.edu:8090/api/api.php";
+	private static String secureUrl = "https://apo.case.edu/api/api.php";
 	
 	private Context context;
 	
